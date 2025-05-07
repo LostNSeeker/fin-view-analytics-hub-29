@@ -1,77 +1,114 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Bell, CheckCircle, File, IndianRupee, Users, X } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bell, CheckCircle, Clock, AlertTriangle, Info } from 'lucide-react';
 
 const notifications = [
   {
     id: 1,
-    type: 'claim',
-    title: 'नया क्लेम अनुरोध प्राप्त हुआ',
-    description: 'अमित शर्मा ने एक नया क्लेम अनुरोध जमा किया है। कृपया समीक्षा करें।',
-    time: '10 मिनट पहले',
+    title: "New claim submitted",
+    description: "Rahul Sharma has submitted a new claim for approval",
+    time: "2 hours ago",
     read: false,
-    icon: File
+    type: "claim",
+    priority: "medium"
   },
   {
     id: 2,
-    type: 'payment',
-    title: '₹45,000 का भुगतान प्राप्त हुआ',
-    description: 'प्रिया पटेल के क्लेम #3542 के लिए भुगतान सफलतापूर्वक प्राप्त हुआ है।',
-    time: '2 घंटे पहले',
-    read: false,
-    icon: IndianRupee
+    title: "Claim approved",
+    description: "Claim #CL-2023-045 has been approved by the admin",
+    time: "5 hours ago",
+    read: true,
+    type: "claim",
+    priority: "low"
   },
   {
     id: 3,
-    type: 'user',
-    title: 'नया कर्मचारी जोड़ा गया',
-    description: 'संजय वर्मा को सिस्टम में नए कर्मचारी के रूप में जोड़ा गया है।',
-    time: '5 घंटे पहले',
-    read: true,
-    icon: Users
+    title: "System maintenance",
+    description: "Scheduled system maintenance on May 10th at 2:00 AM IST",
+    time: "1 day ago",
+    read: false,
+    type: "system",
+    priority: "high"
   },
   {
     id: 4,
-    type: 'claim',
-    title: 'क्लेम अनुरोध अपडेट किया गया',
-    description: 'अनुराधा सिंह के क्लेम #3245 में अपडेट किया गया है। कृपया समीक्षा करें।',
-    time: '1 दिन पहले',
+    title: "New employee registered",
+    description: "Ananya Patel has been registered as a claims specialist",
+    time: "2 days ago",
     read: true,
-    icon: File
+    type: "employee",
+    priority: "medium"
   },
   {
     id: 5,
-    type: 'payment',
-    title: '₹25,000 का भुगतान प्रक्रियाधीन',
-    description: 'राहुल शर्मा के क्लेम #3656 के लिए भुगतान प्रक्रिया में है।',
-    time: '2 दिन पहले',
+    title: "Critical alert",
+    description: "Multiple failed login attempts detected on your account",
+    time: "3 days ago",
+    read: false,
+    type: "security",
+    priority: "high"
+  },
+  {
+    id: 6,
+    title: "Payment processed",
+    description: "Payment of ₹45,000 for claim #CL-2023-032 has been processed",
+    time: "3 days ago",
+    read: false,
+    type: "payment",
+    priority: "medium"
+  },
+  {
+    id: 7,
+    title: "Report ready",
+    description: "Monthly claims summary report for April is now available",
+    time: "4 days ago",
     read: true,
-    icon: IndianRupee
+    type: "report",
+    priority: "low"
   }
 ];
 
-const NotificationItem = ({ notification }) => {
-  const IconComponent = notification.icon;
-  
+const NotificationItem = ({ notification, onMarkAsRead }: { notification: any, onMarkAsRead: (id: number) => void }) => {
+  const getPriorityIcon = (priority: string) => {
+    switch(priority) {
+      case "high":
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case "medium":
+        return <Info className="h-5 w-5 text-amber-500" />;
+      case "low":
+        return <Clock className="h-5 w-5 text-blue-500" />;
+      default:
+        return <Info className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
   return (
-    <div className={`p-4 ${notification.read ? '' : 'bg-blue-50'} hover:bg-gray-50`}>
-      <div className="flex gap-4">
-        <div className={`flex-shrink-0 h-10 w-10 rounded-full ${notification.read ? 'bg-gray-100' : 'bg-blue-100'} flex items-center justify-center`}>
-          <IconComponent className={`h-5 w-5 ${notification.read ? 'text-gray-600' : 'text-blue-600'}`} />
+    <div className={`p-4 border-b last:border-0 ${notification.read ? 'bg-white' : 'bg-blue-50'}`}>
+      <div className="flex items-start gap-3">
+        <div className="mt-1">
+          {getPriorityIcon(notification.priority)}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between">
-            <p className={`text-sm font-medium ${notification.read ? 'text-gray-900' : 'text-blue-900'}`}>
-              {notification.title}
-            </p>
-            <p className="text-xs text-gray-500">
-              {notification.time}
-            </p>
+        <div className="flex-1">
+          <h3 className={`font-medium ${notification.read ? 'text-gray-700' : 'text-black'}`}>
+            {notification.title}
+          </h3>
+          <p className="text-gray-600 text-sm mt-1">{notification.description}</p>
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-gray-500">{notification.time}</span>
+            {!notification.read && (
+              <Button variant="ghost" size="sm" onClick={() => onMarkAsRead(notification.id)}>
+                Mark as read
+              </Button>
+            )}
           </div>
-          <p className="text-sm text-gray-500 mt-1">{notification.description}</p>
         </div>
       </div>
     </div>
@@ -79,44 +116,94 @@ const NotificationItem = ({ notification }) => {
 };
 
 const Notifications = () => {
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const [notificationsList, setNotificationsList] = useState(notifications);
   
-  return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">नोटिफिकेशन</h1>
-          <p className="text-gray-500">{notifications.length} नोटिफिकेशन, {unreadCount} अपठित</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <CheckCircle className="h-4 w-4" />
-            सभी पढ़े हुए के रूप में चिह्नित करें
-          </Button>
-          <Button variant="outline" size="sm" className="flex items-center gap-1 text-red-600 hover:text-red-700">
-            <X className="h-4 w-4" />
-            सभी साफ़ करें
-          </Button>
-        </div>
-      </div>
+  const unreadCount = notificationsList.filter(n => !n.read).length;
+  
+  const markAsRead = (id: number) => {
+    setNotificationsList(notificationsList.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    ));
+  };
+  
+  const markAllAsRead = () => {
+    setNotificationsList(notificationsList.map(n => ({ ...n, read: true })));
+  };
+  
+  const filterByType = (type: string) => {
+    if (type === 'all') return notificationsList;
+    return notificationsList.filter(n => n.type === type);
+  };
 
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-100 p-2 rounded-full">
+            <Bell className="h-6 w-6 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Notifications</h1>
+            <p className="text-gray-500">{unreadCount} unread notifications</p>
+          </div>
+        </div>
+        
+        {unreadCount > 0 && (
+          <Button variant="outline" onClick={markAllAsRead}>
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Mark all as read
+          </Button>
+        )}
+      </div>
+      
       <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Recent Notifications</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
-          {notifications.map((notification, index) => (
-            <React.Fragment key={notification.id}>
-              <NotificationItem notification={notification} />
-              {index < notifications.length - 1 && <Separator />}
-            </React.Fragment>
-          ))}
-          {notifications.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Bell className="h-6 w-6 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium">कोई नोटिफिकेशन नहीं</h3>
-              <p className="text-gray-500 text-sm mt-1">आपके पास कोई अपठित नोटिफिकेशन नहीं है</p>
-            </div>
-          )}
+          <Tabs defaultValue="all">
+            <TabsList className="grid grid-cols-5 mb-0 mx-4 mt-0">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="claim">Claims</TabsTrigger>
+              <TabsTrigger value="payment">Payments</TabsTrigger>
+              <TabsTrigger value="employee">Employees</TabsTrigger>
+              <TabsTrigger value="system">System</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="m-0 divide-y">
+              {notificationsList.length === 0 ? (
+                <div className="py-8 text-center text-gray-500">
+                  No notifications to display
+                </div>
+              ) : (
+                notificationsList.map(notification => (
+                  <NotificationItem 
+                    key={notification.id} 
+                    notification={notification} 
+                    onMarkAsRead={markAsRead}
+                  />
+                ))
+              )}
+            </TabsContent>
+            
+            {["claim", "payment", "employee", "system"].map((type) => (
+              <TabsContent key={type} value={type} className="m-0 divide-y">
+                {filterByType(type).length === 0 ? (
+                  <div className="py-8 text-center text-gray-500">
+                    No {type} notifications to display
+                  </div>
+                ) : (
+                  filterByType(type).map(notification => (
+                    <NotificationItem 
+                      key={notification.id} 
+                      notification={notification} 
+                      onMarkAsRead={markAsRead}
+                    />
+                  ))
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
       </Card>
     </div>

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   Card,
   CardContent,
@@ -20,7 +20,11 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart } from '@/components/charts/BarChart';
-import { User } from 'lucide-react';
+import { User, UserPlus, Plus } from 'lucide-react';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 // Sample employee data
 const employeesData = [
@@ -94,6 +98,16 @@ const monthlyClaimsData = [
   { name: 'May', claims: 9 },
   { name: 'Jun', claims: 4 },
 ];
+
+const employeeFormSchema = z.object({
+  name: z.string().min(2, { message: "Name is required" }),
+  position: z.string().min(2, { message: "Position is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().min(10, { message: "Phone number is required" }),
+  insurance: z.string().optional(),
+  poc: z.string().optional(),
+  broker: z.string().optional(),
+});
 
 const EmployeeDetails = ({ employee }: { employee: any }) => {
   return (
@@ -216,6 +230,7 @@ const Employees = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   
   const filteredEmployees = employeesData.filter((employee) =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -228,11 +243,41 @@ const Employees = () => {
     setIsDialogOpen(true);
   };
 
+  const form = useForm<z.infer<typeof employeeFormSchema>>({
+    resolver: zodResolver(employeeFormSchema),
+    defaultValues: {
+      name: "",
+      position: "",
+      email: "",
+      phone: "",
+      insurance: "",
+      poc: "",
+      broker: "",
+    },
+  });
+
+  const onSubmit = (data: z.infer<typeof employeeFormSchema>) => {
+    // Here you would typically save the new employee data
+    console.log("New employee data:", data);
+    setIsAddEmployeeOpen(false);
+    form.reset();
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Employees</h1>
-        <p className="text-gray-500">Manage employee information and claims performance</p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Employees</h1>
+          <p className="text-gray-500">Manage employee information and claims performance</p>
+        </div>
+
+        <Button 
+          className="flex items-center gap-2" 
+          onClick={() => setIsAddEmployeeOpen(true)}
+        >
+          <UserPlus className="h-4 w-4" />
+          Add Employee
+        </Button>
       </div>
       
       <div className="flex gap-4 items-center">
@@ -287,6 +332,112 @@ const Employees = () => {
             <DialogTitle>Employee Information</DialogTitle>
           </DialogHeader>
           {selectedEmployee && <EmployeeDetails employee={selectedEmployee} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddEmployeeOpen} onOpenChange={setIsAddEmployeeOpen}>
+        <DialogContent className="sm:max-w-[475px]">
+          <DialogHeader>
+            <DialogTitle>Add New Employee</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Employee name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Job title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="employee@finview.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Contact number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="insurance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Insurance Company</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Insurance provider" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="poc"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Point of Contact</FormLabel>
+                    <FormControl>
+                      <Input placeholder="POC name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="broker"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Broker/Agent</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Broker name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="pt-4">
+                <Button type="submit">Add Employee</Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

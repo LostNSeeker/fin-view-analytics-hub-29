@@ -15,14 +15,14 @@ export const TopNav: React.FC<TopNavProps> = ({ toggleSidebar }) => {
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-2">
             <Menu className="h-5 w-5" />
-            <span className="sr-only">टॉगल साइडबार</span>
+            <span className="sr-only">Toggle Sidebar</span>
           </Button>
           <div className="hidden md:block ml-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
               <Input 
                 type="search" 
-                placeholder="खोजें..." 
+                placeholder="Search..." 
                 className="w-[200px] lg:w-[300px] pl-8 rounded-md" 
               />
             </div>
@@ -31,7 +31,7 @@ export const TopNav: React.FC<TopNavProps> = ({ toggleSidebar }) => {
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
-            <span className="sr-only">नोटिफिकेशन</span>
+            <span className="sr-only">Notifications</span>
           </Button>
           <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center text-white">
             RA

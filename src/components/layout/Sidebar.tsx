@@ -45,18 +45,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   
   const mainNavItems = [
-    { icon: Home, label: 'डैशबोर्ड', path: '/' },
-    { icon: ClipboardList, label: 'क्लेम्स', path: '/claims' },
-    { icon: LineChart, label: 'एनालिटिक्स', path: '/analytics' },
-    { icon: Settings, label: 'सेटिंग्स', path: '/settings' },
+    { icon: Home, label: 'Dashboard', path: '/' },
+    { icon: ClipboardList, label: 'Claims', path: '/claims' },
+    { icon: LineChart, label: 'Analytics', path: '/analytics' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
   
   const secondaryNavItems = [
-    { icon: User, label: 'प्रोफाइल', path: '/profile' },
-    { icon: HelpCircle, label: 'सहायता केंद्र', path: '/help' },
-    { icon: Users, label: 'कर्मचारी सूची', path: '/employees' },
-    { icon: Users, label: 'ग्राहक सूची', path: '/customers' },
-    { icon: Bell, label: 'नोटिफिकेशन', path: '/notifications' },
+    { icon: User, label: 'Profile', path: '/profile' },
+    { icon: HelpCircle, label: 'Help Center', path: '/help' },
+    { icon: Users, label: 'Employees', path: '/employees' },
+    { icon: Users, label: 'Customers', path: '/customers' },
+    { icon: Bell, label: 'Notifications', path: '/notifications' },
   ];
 
   return (
@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center">
             <span className="text-white font-bold text-sm">FC</span>
           </div>
-          {isOpen && <span className="text-lg font-semibold text-sidebar-foreground">वित्तदृष्टि</span>}
+          {isOpen && <span className="text-lg font-semibold text-sidebar-foreground">FinInsight</span>}
         </div>
       </div>
       
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         
         <div className="mt-6 pt-6 border-t border-sidebar-border">
           <p className={cn("px-3 text-xs font-medium text-sidebar-foreground/60 mb-2", !isOpen && 'hidden')}>
-            प्रबंधन
+            Management
           </p>
           <div className="space-y-1">
             {secondaryNavItems.map((item) => (

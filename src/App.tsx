@@ -11,6 +11,9 @@ import Claims from "@/pages/Claims";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import Employees from "@/pages/Employees";
+import CustomerList from "@/pages/CustomerList";
+import HelpCenter from "@/pages/HelpCenter";
+import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,7 +77,7 @@ const App = () => (
             path="/help" 
             element={
               <MainLayout>
-                <NotFound />
+                <HelpCenter />
               </MainLayout>
             } 
           />
@@ -82,7 +85,15 @@ const App = () => (
             path="/customers" 
             element={
               <MainLayout>
-                <NotFound />
+                <CustomerList />
+              </MainLayout>
+            } 
+          />
+          <Route 
+            path="/notifications" 
+            element={
+              <MainLayout>
+                <Notifications />
               </MainLayout>
             } 
           />

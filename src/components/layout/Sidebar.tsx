@@ -10,7 +10,8 @@ import {
   LineChart,
   Settings,
   User,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,12 +31,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, to, isActi
     <Link
       to={to}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent",
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent whitespace-nowrap",
         isActive && "bg-sidebar-accent font-medium"
       )}
     >
       <Icon className="h-5 w-5" />
-      <span>{label}</span>
+      <span className="transition-opacity duration-200">{label}</span>
     </Link>
   );
 };
@@ -44,17 +45,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
   
   const mainNavItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
-    { icon: ClipboardList, label: 'Claims', path: '/claims' },
-    { icon: LineChart, label: 'Analytics', path: '/analytics' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: Home, label: 'डैशबोर्ड', path: '/' },
+    { icon: ClipboardList, label: 'क्लेम्स', path: '/claims' },
+    { icon: LineChart, label: 'एनालिटिक्स', path: '/analytics' },
+    { icon: Settings, label: 'सेटिंग्स', path: '/settings' },
   ];
   
   const secondaryNavItems = [
-    { icon: User, label: 'Profile', path: '/profile' },
-    { icon: HelpCircle, label: 'Help Center', path: '/help' },
-    { icon: Users, label: 'Employee List', path: '/employees' },
-    { icon: Users, label: 'Customer List', path: '/customers' },
+    { icon: User, label: 'प्रोफाइल', path: '/profile' },
+    { icon: HelpCircle, label: 'सहायता केंद्र', path: '/help' },
+    { icon: Users, label: 'कर्मचारी सूची', path: '/employees' },
+    { icon: Users, label: 'ग्राहक सूची', path: '/customers' },
+    { icon: Bell, label: 'नोटिफिकेशन', path: '/notifications' },
   ];
 
   return (
@@ -69,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center">
             <span className="text-white font-bold text-sm">FC</span>
           </div>
-          {isOpen && <span className="text-lg font-semibold text-sidebar-foreground">FinView</span>}
+          {isOpen && <span className="text-lg font-semibold text-sidebar-foreground">वित्तदृष्टि</span>}
         </div>
       </div>
       
@@ -88,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         
         <div className="mt-6 pt-6 border-t border-sidebar-border">
           <p className={cn("px-3 text-xs font-medium text-sidebar-foreground/60 mb-2", !isOpen && 'hidden')}>
-            Management
+            प्रबंधन
           </p>
           <div className="space-y-1">
             {secondaryNavItems.map((item) => (

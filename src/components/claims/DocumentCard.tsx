@@ -7,10 +7,16 @@ import { Button } from '@/components/ui/button';
 interface DocumentProps {
   document: {
     id: string;
+    reportNo?: string;
+    claimId?: string;
     title: string;
     type: string;
     thumbnail: string;
     client: string;
+    insurer?: string;
+    insured?: string;
+    surveyer?: string;
+    dateOfDeputation?: string;
     status: string;
     fileSize: string;
     dateModified: string;
@@ -41,7 +47,18 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode }) =>
           </div>
           <div className="flex-grow">
             <h3 className="font-medium">{document.title}</h3>
-            <p className="text-sm text-gray-500">{document.id} • {document.client}</p>
+            <div className="flex text-sm text-gray-500 gap-2">
+              <span>{document.id}</span>
+              {document.reportNo && <span>• Report: {document.reportNo}</span>}
+              {document.claimId && <span>• Claim: {document.claimId}</span>}
+            </div>
+            {(document.insurer || document.surveyer) && (
+              <div className="text-xs text-gray-500 mt-1">
+                {document.insurer && <span className="mr-2">Insurer: {document.insurer}</span>}
+                {document.insured && <span className="mr-2">Insured: {document.insured}</span>}
+                {document.surveyer && <span>Surveyer: {document.surveyer}</span>}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
@@ -80,6 +97,11 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode }) =>
             {document.status}
           </span>
         </div>
+        {document.reportNo && (
+          <div className="absolute top-2 left-2 bg-white rounded-full p-1">
+            <span className="text-xs font-medium text-gray-700">{document.reportNo}</span>
+          </div>
+        )}
       </div>
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
@@ -87,7 +109,25 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode }) =>
           <span className="text-xs text-gray-500">{document.fileSize}</span>
         </div>
         <h3 className="font-medium truncate">{document.title}</h3>
-        <p className="text-sm text-gray-500">{document.id}</p>
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>{document.id}</span>
+          {document.claimId && <span>{document.claimId}</span>}
+        </div>
+        
+        {document.insurer && (
+          <div className="mt-1 text-xs text-gray-500">
+            <p>Insurer: {document.insurer}</p>
+            {document.insured && <p>Insured: {document.insured}</p>}
+          </div>
+        )}
+        
+        {document.surveyer && (
+          <div className="mt-1 text-xs text-gray-500 flex justify-between">
+            <span>Surveyer: {document.surveyer}</span>
+            {document.dateOfDeputation && <span>{document.dateOfDeputation}</span>}
+          </div>
+        )}
+        
         <div className="flex justify-between items-center mt-3">
           <div className="flex items-center">
             <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs mr-2">

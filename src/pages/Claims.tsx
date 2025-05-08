@@ -3,51 +3,75 @@ import React, { useState } from 'react';
 import { Search, Filter, Upload, Download, Eye, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClaimForm } from '@/components/claims/ClaimForm';
 import { DocumentCard } from '@/components/claims/DocumentCard';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 
-// Sample document data
+// Extended document data with additional fields
 const documentsData = [
   {
     id: 'DOC-2025-001',
+    reportNo: 'REP-001',
+    claimId: 'CLM-2025-001',
     title: 'Auto Insurance Policy',
     type: 'Policy',
     thumbnail: '/lovable-uploads/30159273-4f03-406e-aa58-c934d8e402c4.png',
     client: 'Acme Insurance Corp',
+    insurer: 'Global Insurance Ltd',
+    insured: 'John Smith',
+    surveyer: 'Robert Johnson',
+    dateOfDeputation: '2025-03-15',
     status: 'Active',
     fileSize: '2.4 MB',
     dateModified: '2025-04-18',
   },
   {
     id: 'DOC-2025-002',
+    reportNo: 'REP-002',
+    claimId: 'CLM-2025-002',
     title: 'Property Damage Claim',
     type: 'Claim',
     thumbnail: '/lovable-uploads/30159273-4f03-406e-aa58-c934d8e402c4.png',
     client: 'Global Protect Inc',
+    insurer: 'SafeGuard Insurers',
+    insured: 'Emily Williams',
+    surveyer: 'Michael Brown',
+    dateOfDeputation: '2025-03-18',
     status: 'Pending',
     fileSize: '5.8 MB',
     dateModified: '2025-04-15',
   },
   {
     id: 'DOC-2025-003',
+    reportNo: 'REP-003',
+    claimId: 'CLM-2025-003',
     title: 'Business Liability Contract',
     type: 'Contract',
     thumbnail: '/lovable-uploads/30159273-4f03-406e-aa58-c934d8e402c4.png',
     client: 'SafeGuard Ltd',
+    insurer: 'Premium Insurance Co',
+    insured: 'Tech Solutions Inc',
+    surveyer: 'David Wilson',
+    dateOfDeputation: '2025-03-20',
     status: 'Active',
     fileSize: '3.2 MB',
     dateModified: '2025-04-12',
   },
   {
     id: 'DOC-2025-004',
+    reportNo: 'REP-004',
+    claimId: 'CLM-2025-004',
     title: 'Health Insurance Application',
     type: 'Application',
     thumbnail: '/lovable-uploads/30159273-4f03-406e-aa58-c934d8e402c4.png',
     client: 'Secure Insurance Group',
+    insurer: 'MediCare Insurance',
+    insured: 'Sarah Thompson',
+    surveyer: 'Jennifer Davis',
+    dateOfDeputation: '2025-03-25',
     status: 'Draft',
     fileSize: '1.7 MB',
     dateModified: '2025-04-20',
@@ -60,15 +84,22 @@ const Claims = () => {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedTime, setSelectedTime] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
+  const [selectedInsurer, setSelectedInsurer] = useState('all');
+  const [selectedSurveyer, setSelectedSurveyer] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const filteredDocuments = documentsData.filter((doc) => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          doc.id.toLowerCase().includes(searchTerm.toLowerCase());
+                          doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          doc.claimId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          doc.reportNo.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClient = selectedClient === 'all' || doc.client.includes(selectedClient);
     const matchesType = selectedType === 'all' || doc.type === selectedType;
     const matchesStatus = selectedStatus === 'all' || doc.status === selectedStatus;
-    return matchesSearch && matchesClient && matchesType && matchesStatus;
+    const matchesInsurer = selectedInsurer === 'all' || doc.insurer.includes(selectedInsurer);
+    const matchesSurveyer = selectedSurveyer === 'all' || doc.surveyer.includes(selectedSurveyer);
+    
+    return matchesSearch && matchesClient && matchesType && matchesStatus && matchesInsurer && matchesSurveyer;
   });
 
   return (
@@ -79,13 +110,23 @@ const Claims = () => {
           <p className="text-gray-500">Showing {filteredDocuments.length} documents</p>
         </div>
         
-        <Button className="bg-fin-blue hover:bg-fin-dark-blue">
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Document
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-fin-blue hover:bg-fin-dark-blue">
+              <Upload className="h-4 w-4 mr-2" />
+              Add Claim
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[625px]">
+            <DialogHeader>
+              <DialogTitle>New Claim</DialogTitle>
+            </DialogHeader>
+            <ClaimForm documentType="Claim" documentId="New" />
+          </DialogContent>
+        </Dialog>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="md:col-span-1">
           <Select value={selectedClient} onValueChange={setSelectedClient}>
             <SelectTrigger className="w-full">
@@ -112,6 +153,36 @@ const Claims = () => {
               <SelectItem value="Claim">Claim</SelectItem>
               <SelectItem value="Contract">Contract</SelectItem>
               <SelectItem value="Application">Application</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="md:col-span-1">
+          <Select value={selectedInsurer} onValueChange={setSelectedInsurer}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Insurers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Insurers</SelectItem>
+              <SelectItem value="Global">Global Insurance Ltd</SelectItem>
+              <SelectItem value="SafeGuard">SafeGuard Insurers</SelectItem>
+              <SelectItem value="Premium">Premium Insurance Co</SelectItem>
+              <SelectItem value="MediCare">MediCare Insurance</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="md:col-span-1">
+          <Select value={selectedSurveyer} onValueChange={setSelectedSurveyer}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Surveyers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Surveyers</SelectItem>
+              <SelectItem value="Robert">Robert Johnson</SelectItem>
+              <SelectItem value="Michael">Michael Brown</SelectItem>
+              <SelectItem value="David">David Wilson</SelectItem>
+              <SelectItem value="Jennifer">Jennifer Davis</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -158,10 +229,19 @@ const Claims = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setSearchTerm('')}>
+          <Button variant="outline" size="sm" onClick={() => {
+            setSearchTerm('');
+            setSelectedClient('all');
+            setSelectedType('all');
+            setSelectedStatus('all');
+            setSelectedTime('all');
+            setSelectedInsurer('all');
+            setSelectedSurveyer('all');
+          }}>
             Reset Filters
           </Button>
           <Button variant="default" size="sm" className="bg-fin-blue hover:bg-fin-dark-blue">
+            <Filter className="h-4 w-4 mr-2" />
             Apply Filters
           </Button>
           <div className="border rounded-md flex">
@@ -197,23 +277,99 @@ const Claims = () => {
         </div>
       </div>
       
-      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-        {filteredDocuments.map((document) => (
-          <Dialog key={document.id}>
-            <DialogTrigger asChild>
-              <div className="cursor-pointer">
-                <DocumentCard document={document} viewMode={viewMode} />
-              </div>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[625px]">
-              <DialogHeader>
-                <DialogTitle>New Claim: {document.title}</DialogTitle>
-              </DialogHeader>
-              <ClaimForm documentType={document.type} documentId={document.id} />
-            </DialogContent>
-          </Dialog>
-        ))}
-      </div>
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDocuments.map((document) => (
+            <Dialog key={document.id}>
+              <DialogTrigger asChild>
+                <div className="cursor-pointer">
+                  <DocumentCard document={document} viewMode="grid" />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[625px]">
+                <DialogHeader>
+                  <DialogTitle>New Claim: {document.title}</DialogTitle>
+                </DialogHeader>
+                <ClaimForm documentType={document.type} documentId={document.id} />
+              </DialogContent>
+            </Dialog>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Report No</TableHead>
+                <TableHead>Claim ID</TableHead>
+                <TableHead>Document</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Insurer</TableHead>
+                <TableHead>Insured</TableHead>
+                <TableHead>Surveyer</TableHead>
+                <TableHead>Deputation Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDocuments.map((document) => (
+                <TableRow key={document.id} className="hover:bg-muted/50">
+                  <TableCell>{document.reportNo}</TableCell>
+                  <TableCell>{document.claimId}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-medium">{document.type.substring(0, 1)}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium truncate max-w-[180px]">{document.title}</p>
+                        <p className="text-sm text-muted-foreground">{document.id}</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{document.type}</TableCell>
+                  <TableCell>{document.insurer}</TableCell>
+                  <TableCell>{document.insured}</TableCell>
+                  <TableCell>{document.surveyer}</TableCell>
+                  <TableCell>{document.dateOfDeputation}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                      ${document.status === 'Active' ? 'bg-green-100 text-green-800' : 
+                      document.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-gray-100 text-gray-800'}`}>
+                      {document.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[625px]">
+                          <DialogHeader>
+                            <DialogTitle>Edit Claim: {document.title}</DialogTitle>
+                          </DialogHeader>
+                          <ClaimForm documentType={document.type} documentId={document.id} />
+                        </DialogContent>
+                      </Dialog>
+                      <Button variant="ghost" size="icon">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 };

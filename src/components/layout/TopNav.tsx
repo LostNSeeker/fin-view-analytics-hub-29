@@ -3,6 +3,11 @@ import React from 'react';
 import { Bell, Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface TopNavProps {
   toggleSidebar: () => void;
@@ -13,9 +18,14 @@ export const TopNav: React.FC<TopNavProps> = ({ toggleSidebar }) => {
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
       <div className="flex items-center justify-between h-16 px-4">
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleSidebar}
+            className="mr-2"
+            aria-label="Toggle Sidebar"
+          >
             <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle Sidebar</span>
           </Button>
           <div className="hidden md:block ml-4">
             <div className="relative">
@@ -29,10 +39,22 @@ export const TopNav: React.FC<TopNavProps> = ({ toggleSidebar }) => {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-            <span className="sr-only">Notifications</span>
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Bell className="h-5 w-5" />
+                <span className="sr-only">Notifications</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0">
+              <div className="p-4 border-b">
+                <h3 className="font-medium">Notifications</h3>
+              </div>
+              <div className="p-4 text-sm">
+                <p className="text-center text-muted-foreground">No new notifications</p>
+              </div>
+            </PopoverContent>
+          </Popover>
           <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center text-white">
             RA
           </div>

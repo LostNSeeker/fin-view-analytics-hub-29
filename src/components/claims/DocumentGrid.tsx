@@ -21,9 +21,9 @@ export const DocumentGrid: React.FC<DocumentGridProps> = ({ documents }) => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[625px]">
             <DialogHeader>
-              <DialogTitle>New Claim: {document.title}</DialogTitle>
+              <DialogTitle>Claim Details: {document.title}</DialogTitle>
             </DialogHeader>
-            <ClaimForm documentType={document.type} documentId={document.id} />
+            <ClaimForm documentType={document.type} documentId={document.id} skipTypeSelection={true} />
           </DialogContent>
         </Dialog>
       ))}

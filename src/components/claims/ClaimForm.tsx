@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,9 +11,10 @@ import { useToast } from '@/components/ui/use-toast';
 interface ClaimFormProps {
   documentType: string;
   documentId: string;
+  skipTypeSelection?: boolean;
 }
 
-export const ClaimForm: React.FC<ClaimFormProps> = ({ documentType, documentId }) => {
+export const ClaimForm: React.FC<ClaimFormProps> = ({ documentType, documentId, skipTypeSelection = false }) => {
   const [formData, setFormData] = useState({
     reportNo: documentId === 'New' ? '' : `REP-${documentId.split('-')[2] || '001'}`,
     claimId: documentId === 'New' ? '' : `CLM-${documentId.split('-')[2] || '001'}`,
@@ -35,6 +35,11 @@ export const ClaimForm: React.FC<ClaimFormProps> = ({ documentType, documentId }
   });
   
   const { toast } = useToast();
+  
+  // Update claimType when documentType prop changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, claimType: documentType }));
+  }, [documentType]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -92,6 +97,7 @@ export const ClaimForm: React.FC<ClaimFormProps> = ({ documentType, documentId }
               <Select 
                 value={formData.claimType} 
                 onValueChange={(value) => handleSelectChange('claimType', value)}
+                disabled={skipTypeSelection}
               >
                 <SelectTrigger id="claimType">
                   <SelectValue placeholder="Select type" />

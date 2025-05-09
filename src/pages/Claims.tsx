@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, Upload, Download, Eye, MoreHorizontal } from 'lucide-react';
+import { Search, Filter, Upload, Download, Eye, MoreHorizontal, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClaimForm } from '@/components/claims/ClaimForm';
 import { DocumentCard } from '@/components/claims/DocumentCard';
@@ -78,29 +79,312 @@ const documentsData = [
   }
 ];
 
+// Filter options lists
+const clientOptions = [
+  { value: 'Acme Insurance Corp', label: 'Acme Insurance Corp' },
+  { value: 'Global Protect Inc', label: 'Global Protect Inc' },
+  { value: 'SafeGuard Ltd', label: 'SafeGuard Ltd' },
+  { value: 'Secure Insurance Group', label: 'Secure Insurance Group' },
+];
+
+const typeOptions = [
+  { value: 'Policy', label: 'Policy' },
+  { value: 'Claim', label: 'Claim' },
+  { value: 'Contract', label: 'Contract' },
+  { value: 'Application', label: 'Application' },
+];
+
+const insurerOptions = [
+  { value: 'Global Insurance Ltd', label: 'Global Insurance Ltd' },
+  { value: 'SafeGuard Insurers', label: 'SafeGuard Insurers' },
+  { value: 'Premium Insurance Co', label: 'Premium Insurance Co' },
+  { value: 'MediCare Insurance', label: 'MediCare Insurance' },
+];
+
+const surveyerOptions = [
+  { value: 'Robert Johnson', label: 'Robert Johnson' },
+  { value: 'Michael Brown', label: 'Michael Brown' },
+  { value: 'David Wilson', label: 'David Wilson' },
+  { value: 'Jennifer Davis', label: 'Jennifer Davis' },
+];
+
+const statusOptions = [
+  { value: 'Active', label: 'Active' },
+  { value: 'Pending', label: 'Pending' },
+  { value: 'Draft', label: 'Draft' },
+];
+
+const timeOptions = [
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
+  { value: 'year', label: 'This Year' },
+];
+
 const Claims = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClient, setSelectedClient] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedTime, setSelectedTime] = useState('all');
-  const [selectedInsurer, setSelectedInsurer] = useState('all');
-  const [selectedSurveyer, setSelectedSurveyer] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Multi-select filters
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedInsurers, setSelectedInsurers] = useState<string[]>([]);
+  const [selectedSurveyers, setSelectedSurveyers] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
+  
+  const getAppliedFiltersCount = () => {
+    return [
+      selectedClients.length, 
+      selectedTypes.length, 
+      selectedInsurers.length, 
+      selectedSurveyers.length, 
+      selectedStatuses.length, 
+      selectedTimes.length
+    ].reduce((a, b) => a + b, 0);
+  };
   
   const filteredDocuments = documentsData.filter((doc) => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          doc.claimId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          doc.reportNo.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClient = selectedClient === 'all' || doc.client.includes(selectedClient);
-    const matchesType = selectedType === 'all' || doc.type === selectedType;
-    const matchesStatus = selectedStatus === 'all' || doc.status === selectedStatus;
-    const matchesInsurer = selectedInsurer === 'all' || doc.insurer.includes(selectedInsurer);
-    const matchesSurveyer = selectedSurveyer === 'all' || doc.surveyer.includes(selectedSurveyer);
+                          doc.claimId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          doc.reportNo?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesClient && matchesType && matchesStatus && matchesInsurer && matchesSurveyer;
+    const matchesClient = selectedClients.length === 0 || selectedClients.includes(doc.client);
+    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(doc.type);
+    const matchesInsurer = selectedInsurers.length === 0 || (doc.insurer && selectedInsurers.includes(doc.insurer));
+    const matchesSurveyer = selectedSurveyers.length === 0 || (doc.surveyer && selectedSurveyers.includes(doc.surveyer));
+    const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(doc.status);
+    // Time filter would need additional logic for actual implementation
+    const matchesTime = selectedTimes.length === 0;
+    
+    return matchesSearch && matchesClient && matchesType && matchesInsurer && matchesSurveyer && matchesStatus && matchesTime;
   });
+
+  // Toggle selection of an item
+  const toggleSelection = (value: string, selectedArray: string[], setFunction: React.Dispatch<React.SetStateAction<string[]>>) => {
+    if (selectedArray.includes(value)) {
+      setFunction(selectedArray.filter((item) => item !== value));
+    } else {
+      setFunction([...selectedArray, value]);
+    }
+  };
+
+  // Reset all filters
+  const resetAllFilters = () => {
+    setSelectedClients([]);
+    setSelectedTypes([]);
+    setSelectedInsurers([]);
+    setSelectedSurveyers([]);
+    setSelectedStatuses([]);
+    setSelectedTimes([]);
+    setSearchTerm('');
+  };
+
+  const renderFilterBadges = () => {
+    const allBadges = [
+      ...selectedClients.map(client => ({ type: 'Client', value: client })),
+      ...selectedTypes.map(type => ({ type: 'Type', value: type })),
+      ...selectedInsurers.map(insurer => ({ type: 'Insurer', value: insurer })),
+      ...selectedSurveyers.map(surveyer => ({ type: 'Surveyer', value: surveyer })),
+      ...selectedStatuses.map(status => ({ type: 'Status', value: status })),
+      ...selectedTimes.map(time => ({ type: 'Time', value: time })),
+    ];
+
+    if (allBadges.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-2 mt-4">
+        {allBadges.map((badge, index) => (
+          <div 
+            key={index}
+            className="bg-gray-100 text-xs rounded-full px-3 py-1 flex items-center gap-1"
+          >
+            <span className="font-medium">{badge.type}:</span> {badge.value}
+            <button 
+              className="ml-1 hover:text-red-500"
+              onClick={() => {
+                switch(badge.type) {
+                  case 'Client': 
+                    setSelectedClients(selectedClients.filter(item => item !== badge.value));
+                    break;
+                  case 'Type': 
+                    setSelectedTypes(selectedTypes.filter(item => item !== badge.value));
+                    break;
+                  case 'Insurer': 
+                    setSelectedInsurers(selectedInsurers.filter(item => item !== badge.value));
+                    break;
+                  case 'Surveyer': 
+                    setSelectedSurveyers(selectedSurveyers.filter(item => item !== badge.value));
+                    break;
+                  case 'Status': 
+                    setSelectedStatuses(selectedStatuses.filter(item => item !== badge.value));
+                    break;
+                  case 'Time': 
+                    setSelectedTimes(selectedTimes.filter(item => item !== badge.value));
+                    break;
+                }
+              }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <button 
+          className="text-xs text-blue-600 hover:underline"
+          onClick={resetAllFilters}
+        >
+          Clear All
+        </button>
+      </div>
+    );
+  };
+
+  const renderFilterPopoverContent = () => (
+    <div className="w-[300px] p-4 space-y-6">
+      <div>
+        <h4 className="font-medium mb-2">Client</h4>
+        <div className="space-y-2">
+          {clientOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`client-${option.value}`} 
+                checked={selectedClients.includes(option.value)} 
+                onCheckedChange={() => toggleSelection(option.value, selectedClients, setSelectedClients)}
+              />
+              <label 
+                htmlFor={`client-${option.value}`}
+                className="text-sm cursor-pointer"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-2">Document Type</h4>
+        <div className="space-y-2">
+          {typeOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`type-${option.value}`} 
+                checked={selectedTypes.includes(option.value)} 
+                onCheckedChange={() => toggleSelection(option.value, selectedTypes, setSelectedTypes)}
+              />
+              <label 
+                htmlFor={`type-${option.value}`}
+                className="text-sm cursor-pointer"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-2">Insurer</h4>
+        <div className="space-y-2">
+          {insurerOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`insurer-${option.value}`} 
+                checked={selectedInsurers.includes(option.value)} 
+                onCheckedChange={() => toggleSelection(option.value, selectedInsurers, setSelectedInsurers)}
+              />
+              <label 
+                htmlFor={`insurer-${option.value}`}
+                className="text-sm cursor-pointer"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-2">Surveyer</h4>
+        <div className="space-y-2">
+          {surveyerOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`surveyer-${option.value}`} 
+                checked={selectedSurveyers.includes(option.value)} 
+                onCheckedChange={() => toggleSelection(option.value, selectedSurveyers, setSelectedSurveyers)}
+              />
+              <label 
+                htmlFor={`surveyer-${option.value}`}
+                className="text-sm cursor-pointer"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-2">Status</h4>
+        <div className="space-y-2">
+          {statusOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`status-${option.value}`} 
+                checked={selectedStatuses.includes(option.value)} 
+                onCheckedChange={() => toggleSelection(option.value, selectedStatuses, setSelectedStatuses)}
+              />
+              <label 
+                htmlFor={`status-${option.value}`}
+                className="text-sm cursor-pointer"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-2">Time Period</h4>
+        <div className="space-y-2">
+          {timeOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <Checkbox 
+                id={`time-${option.value}`} 
+                checked={selectedTimes.includes(option.value)} 
+                onCheckedChange={() => toggleSelection(option.value, selectedTimes, setSelectedTimes)}
+              />
+              <label 
+                htmlFor={`time-${option.value}`}
+                className="text-sm cursor-pointer"
+              >
+                {option.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      <div className="flex justify-between">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={resetAllFilters}
+        >
+          Reset All
+        </Button>
+        <Button 
+          size="sm" 
+          className="bg-fin-blue hover:bg-fin-dark-blue"
+        >
+          Apply Filters
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -126,97 +410,6 @@ const Claims = () => {
         </Dialog>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <div className="md:col-span-1">
-          <Select value={selectedClient} onValueChange={setSelectedClient}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Clients" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
-              <SelectItem value="Acme">Acme Insurance Corp</SelectItem>
-              <SelectItem value="Global">Global Protect Inc</SelectItem>
-              <SelectItem value="SafeGuard">SafeGuard Ltd</SelectItem>
-              <SelectItem value="Secure">Secure Insurance Group</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="md:col-span-1">
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="Policy">Policy</SelectItem>
-              <SelectItem value="Claim">Claim</SelectItem>
-              <SelectItem value="Contract">Contract</SelectItem>
-              <SelectItem value="Application">Application</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="md:col-span-1">
-          <Select value={selectedInsurer} onValueChange={setSelectedInsurer}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Insurers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Insurers</SelectItem>
-              <SelectItem value="Global">Global Insurance Ltd</SelectItem>
-              <SelectItem value="SafeGuard">SafeGuard Insurers</SelectItem>
-              <SelectItem value="Premium">Premium Insurance Co</SelectItem>
-              <SelectItem value="MediCare">MediCare Insurance</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="md:col-span-1">
-          <Select value={selectedSurveyer} onValueChange={setSelectedSurveyer}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Surveyers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Surveyers</SelectItem>
-              <SelectItem value="Robert">Robert Johnson</SelectItem>
-              <SelectItem value="Michael">Michael Brown</SelectItem>
-              <SelectItem value="David">David Wilson</SelectItem>
-              <SelectItem value="Jennifer">Jennifer Davis</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="md:col-span-1">
-          <Select value={selectedTime} onValueChange={setSelectedTime}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Time" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="year">This Year</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="md:col-span-1">
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
       <div className="flex items-center gap-4 justify-between">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -228,22 +421,24 @@ const Claims = () => {
           />
         </div>
         
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => {
-            setSearchTerm('');
-            setSelectedClient('all');
-            setSelectedType('all');
-            setSelectedStatus('all');
-            setSelectedTime('all');
-            setSelectedInsurer('all');
-            setSelectedSurveyer('all');
-          }}>
-            Reset Filters
-          </Button>
-          <Button variant="default" size="sm" className="bg-fin-blue hover:bg-fin-dark-blue">
-            <Filter className="h-4 w-4 mr-2" />
-            Apply Filters
-          </Button>
+        <div className="flex gap-2 items-center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
+                {getAppliedFiltersCount() > 0 && (
+                  <span className="bg-fin-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                    {getAppliedFiltersCount()}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[350px] p-0" align="end">
+              {renderFilterPopoverContent()}
+            </PopoverContent>
+          </Popover>
+          
           <div className="border rounded-md flex">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -277,13 +472,15 @@ const Claims = () => {
         </div>
       </div>
       
+      {renderFilterBadges()}
+      
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDocuments.map((document) => (
+          {filteredDocuments.map((document, index) => (
             <Dialog key={document.id}>
               <DialogTrigger asChild>
                 <div className="cursor-pointer">
-                  <DocumentCard document={document} viewMode="grid" />
+                  <DocumentCard document={document} viewMode="grid" serialNumber={index + 1} />
                 </div>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[625px]">
@@ -300,27 +497,26 @@ const Claims = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px]">S.No</TableHead>
                 <TableHead>Report No</TableHead>
                 <TableHead>Claim ID</TableHead>
                 <TableHead>Document</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Insurer</TableHead>
-                <TableHead>Insured</TableHead>
-                <TableHead>Surveyer</TableHead>
-                <TableHead>Deputation Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDocuments.map((document) => (
+              {filteredDocuments.map((document, index) => (
                 <TableRow key={document.id} className="hover:bg-muted/50">
+                  <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{document.reportNo}</TableCell>
                   <TableCell>{document.claimId}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-medium">{document.type.substring(0, 1)}</span>
+                        <FileText className="h-5 w-5 text-gray-500" />
                       </div>
                       <div>
                         <p className="font-medium truncate max-w-[180px]">{document.title}</p>
@@ -330,9 +526,6 @@ const Claims = () => {
                   </TableCell>
                   <TableCell>{document.type}</TableCell>
                   <TableCell>{document.insurer}</TableCell>
-                  <TableCell>{document.insured}</TableCell>
-                  <TableCell>{document.surveyer}</TableCell>
-                  <TableCell>{document.dateOfDeputation}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                       ${document.status === 'Active' ? 'bg-green-100 text-green-800' : 
@@ -341,8 +534,8 @@ const Claims = () => {
                       {document.status}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="ghost" size="icon">

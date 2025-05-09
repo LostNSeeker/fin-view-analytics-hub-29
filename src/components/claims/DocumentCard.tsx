@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Eye, MoreHorizontal } from 'lucide-react';
+import { Download, Eye, MoreHorizontal, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DocumentProps {
@@ -22,9 +22,10 @@ interface DocumentProps {
     dateModified: string;
   };
   viewMode: 'grid' | 'list';
+  serialNumber?: number;
 }
 
-export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode }) => {
+export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode, serialNumber }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
@@ -42,8 +43,13 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode }) =>
     return (
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="flex items-center p-4">
-          <div className="flex-shrink-0 mr-4 w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-            <span className="text-xs font-medium">{document.type}</span>
+          {serialNumber !== undefined && (
+            <div className="flex-shrink-0 mr-4 w-10 text-center">
+              <span className="font-medium">{serialNumber}</span>
+            </div>
+          )}
+          <div className="flex-shrink-0 mr-4 w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+            <FileText className="h-5 w-5 text-gray-500" />
           </div>
           <div className="flex-grow">
             <h3 className="font-medium">{document.title}</h3>
@@ -52,13 +58,6 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode }) =>
               {document.reportNo && <span>• Report: {document.reportNo}</span>}
               {document.claimId && <span>• Claim: {document.claimId}</span>}
             </div>
-            {(document.insurer || document.surveyer) && (
-              <div className="text-xs text-gray-500 mt-1">
-                {document.insurer && <span className="mr-2">Insurer: {document.insurer}</span>}
-                {document.insured && <span className="mr-2">Insured: {document.insured}</span>}
-                {document.surveyer && <span>Surveyer: {document.surveyer}</span>}
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>

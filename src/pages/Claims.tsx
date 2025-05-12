@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,13 @@ const Claims = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [addClaimStep, setAddClaimStep] = useState<'type' | 'form'>('type');
   const [selectedClaimType, setSelectedClaimType] = useState<string>('Claim');
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: undefined,
+    to: undefined,
+  });
   
   // Multi-select filters
   const [filtersState, setFiltersState] = useState<FiltersState>({
@@ -47,10 +55,25 @@ const Claims = () => {
     const matchesInsurer = selectedInsurers.length === 0 || (doc.insurer && selectedInsurers.includes(doc.insurer));
     const matchesSurveyer = selectedSurveyers.length === 0 || (doc.surveyer && selectedSurveyers.includes(doc.surveyer));
     const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(doc.status);
-    // Time filter would need additional logic for actual implementation
     const matchesTime = selectedTimes.length === 0;
     
-    return matchesSearch && matchesClient && matchesType && matchesInsurer && matchesSurveyer && matchesStatus && matchesTime;
+    // Date range filter
+    let matchesDateRange = true;
+    if (dateRange.from || dateRange.to) {
+      const docDate = doc.dateModified ? new Date(doc.dateModified) : null;
+      
+      if (docDate) {
+        if (dateRange.from && dateRange.to) {
+          matchesDateRange = docDate >= dateRange.from && docDate <= dateRange.to;
+        } else if (dateRange.from) {
+          matchesDateRange = docDate >= dateRange.from;
+        } else if (dateRange.to) {
+          matchesDateRange = docDate <= dateRange.to;
+        }
+      }
+    }
+    
+    return matchesSearch && matchesClient && matchesType && matchesInsurer && matchesSurveyer && matchesStatus && matchesTime && matchesDateRange;
   });
 
   const handleSelectType = (type: string) => {
@@ -69,6 +92,10 @@ const Claims = () => {
       // Reset to first step when dialog is closed
       setAddClaimStep('type');
     }
+  };
+
+  const handleDateRangeChange = (range: { from: Date | undefined; to: Date | undefined }) => {
+    setDateRange(range);
   };
 
   return (
@@ -122,6 +149,8 @@ const Claims = () => {
         surveyerOptions={surveyerOptions}
         statusOptions={statusOptions}
         timeOptions={timeOptions}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
       />
       
       {viewMode === 'grid' ? (

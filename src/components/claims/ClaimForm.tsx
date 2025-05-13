@@ -56,11 +56,10 @@ export const ClaimForm: React.FC<ClaimFormProps> = ({ documentType, documentId, 
     // In a real app, you would submit the form data to your backend
     console.log('Form submitted:', formData);
     
-    // Update toast to not include duration
     toast({
-      title: "Claim submitted",
-      description: "Your claim has been successfully submitted.",
-      variant: "default"
+      title: "Claim Submitted",
+      description: `Claim ${formData.claimId || documentId} has been successfully submitted.`,
+      duration: 5000,
     });
   };
   

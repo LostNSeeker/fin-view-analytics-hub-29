@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Table,
@@ -92,19 +93,17 @@ const customerFormSchema = z.object({
   city: z.string().min(2, { message: "City is required" }),
 });
 
-type DateRange = {
-  from: Date | undefined;
-  to: Date | undefined;
-};
-
 const CustomerList = () => {
   const [isNewCustomerOpen, setIsNewCustomerOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
     from: undefined,
-    to: undefined
+    to: undefined,
   });
-
+  
   const form = useForm<z.infer<typeof customerFormSchema>>({
     resolver: zodResolver(customerFormSchema),
     defaultValues: {
@@ -150,10 +149,6 @@ const CustomerList = () => {
   const clearFilters = () => {
     setSearchTerm('');
     setDateRange({ from: undefined, to: undefined });
-  };
-
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
   };
 
   return (
@@ -206,7 +201,7 @@ const CustomerList = () => {
               mode="range"
               defaultMonth={dateRange.from}
               selected={dateRange}
-              onSelect={handleDateRangeChange}
+              onSelect={setDateRange}
               numberOfMonths={2}
               className={cn("p-3 pointer-events-auto")}
             />

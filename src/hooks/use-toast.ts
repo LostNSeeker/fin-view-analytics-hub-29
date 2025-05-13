@@ -26,7 +26,7 @@ type ToasterToastState = {
 };
 
 // Create a context to manage the toast state
-const ToasterContext = React.createContext<ToasterToastState | undefined>(undefined);
+const ToasterContext = React.createContext<ToasterToastState>({ toasts: [] });
 
 export const ToasterProvider = ({ children }: { children: React.ReactNode }) => {
   const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
@@ -41,20 +41,6 @@ export const ToasterProvider = ({ children }: { children: React.ReactNode }) => 
 export function useToast() {
   const context = React.useContext(ToasterContext);
   
-  if (!context) {
-    // Return a minimal implementation when used outside the provider
-    return {
-      toast: ({ title, description, action, variant }: ToastProps) => {
-        sonnerToast(title, {
-          description,
-          action,
-          className: variant === "destructive" ? "border-red-400" : "",
-        });
-      },
-      toasts: [] as ToasterToast[],
-    };
-  }
-
   return {
     toast: ({ title, description, action, variant }: ToastProps) => {
       sonnerToast(title, {

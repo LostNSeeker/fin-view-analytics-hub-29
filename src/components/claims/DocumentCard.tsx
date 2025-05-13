@@ -25,27 +25,6 @@ interface DocumentProps {
   serialNumber?: number;
 }
 
-// Network images for document cards
-const networkImages = [
-  "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=300&h=200",
-  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=300&h=200",
-  "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&w=300&h=200",
-  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=300&h=200",
-  "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=300&h=200",
-  "https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=300&h=200",
-  "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=300&h=200"
-];
-
-// Function to get a consistent image based on document ID
-const getDocumentImage = (documentId: string): string => {
-  // Use the document ID to consistently select the same image for the same document
-  const hash = documentId.split('').reduce((acc, char) => {
-    return acc + char.charCodeAt(0);
-  }, 0);
-  
-  return networkImages[hash % networkImages.length];
-};
-
 export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode, serialNumber }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,9 +38,6 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode, seri
         return 'bg-blue-100 text-blue-800';
     }
   };
-
-  // Get a network image for this document
-  const documentImage = getDocumentImage(document.id);
 
   if (viewMode === 'list') {
     return (
@@ -108,17 +84,13 @@ export const DocumentCard: React.FC<DocumentProps> = ({ document, viewMode, seri
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="h-40 bg-gray-100 border-b flex items-center justify-center relative">
-        <div className="h-full w-full overflow-hidden">
-          <img 
-            src={documentImage} 
-            alt={document.title} 
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              // If image fails to load, show a placeholder
-              e.currentTarget.src = 'https://placehold.co/300x200?text=No+Preview';
-            }} 
-          />
-        </div>
+        {document.thumbnail ? (
+          <div className="h-full w-full overflow-hidden">
+            <img src={document.thumbnail} alt={document.title} className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <div className="text-gray-400">No Preview</div>
+        )}
         <div className="absolute top-2 right-2 bg-white rounded-full p-1">
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
             {document.status}

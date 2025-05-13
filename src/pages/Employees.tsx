@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Table,
@@ -19,15 +20,11 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart } from '@/components/charts/BarChart';
-import { User, UserPlus, CalendarIcon } from 'lucide-react';
+import { User, UserPlus, Plus } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 // Sample employee data
 const employeesData = [
@@ -41,8 +38,7 @@ const employeesData = [
     performance: 95,
     insurance: 'Guardian Trust',
     poc: 'Sarah Johnson',
-    broker: 'Anchor Protection',
-    joinDate: new Date('2022-05-15')
+    broker: 'Anchor Protection'
   },
   {
     id: 'EMP-002',
@@ -54,8 +50,7 @@ const employeesData = [
     performance: 90,
     insurance: 'Affinity Insurance',
     poc: 'Michael Brown',
-    broker: 'Pinnacle Partners',
-    joinDate: new Date('2022-08-22')
+    broker: 'Pinnacle Partners'
   },
   {
     id: 'EMP-003',
@@ -67,8 +62,7 @@ const employeesData = [
     performance: 82,
     insurance: 'SafeHaven Inc',
     poc: 'Jessica White',
-    broker: 'Guardian Trust',
-    joinDate: new Date('2022-11-10')
+    broker: 'Guardian Trust'
   },
   {
     id: 'EMP-004',
@@ -80,8 +74,7 @@ const employeesData = [
     performance: 88,
     insurance: 'Pinnacle Partners',
     poc: 'Robert Wilson',
-    broker: 'SafeHaven Inc',
-    joinDate: new Date('2023-01-05')
+    broker: 'SafeHaven Inc'
   },
   {
     id: 'EMP-005',
@@ -93,8 +86,7 @@ const employeesData = [
     performance: 85,
     insurance: 'Anchor Protection',
     poc: 'Emily Davis',
-    broker: 'Affinity Insurance',
-    joinDate: new Date('2023-03-30')
+    broker: 'Affinity Insurance'
   },
 ];
 
@@ -153,10 +145,6 @@ const EmployeeDetails = ({ employee }: { employee: any }) => {
               <div>
                 <p className="text-sm text-gray-500">Performance Score</p>
                 <p className="font-medium">{employee.performance}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Join Date</p>
-                <p className="font-medium">{format(employee.joinDate, 'PPP')}</p>
               </div>
             </div>
           </div>
@@ -243,35 +231,12 @@ const Employees = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: undefined,
-    to: undefined
-  });
-
-  // Filter employees by search term and date range
-  const filteredEmployees = employeesData.filter((employee) => {
-    // Search filter
-    const matchesSearch = 
-      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.position.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Date range filter
-    let matchesDateRange = true;
-    if (dateRange.from || dateRange.to) {
-      const employeeDate = employee.joinDate;
-      
-      if (dateRange.from && dateRange.to) {
-        matchesDateRange = employeeDate >= dateRange.from && employeeDate <= dateRange.to;
-      } else if (dateRange.from) {
-        matchesDateRange = employeeDate >= dateRange.from;
-      } else if (dateRange.to) {
-        matchesDateRange = employeeDate <= dateRange.to;
-      }
-    }
-    
-    return matchesSearch && matchesDateRange;
-  });
+  
+  const filteredEmployees = employeesData.filter((employee) =>
+    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    employee.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    employee.position.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   const openEmployeeDetails = (employee: any) => {
     setSelectedEmployee(employee);
@@ -298,15 +263,6 @@ const Employees = () => {
     form.reset();
   };
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setDateRange({ from: undefined, to: undefined });
-  };
-
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -324,53 +280,13 @@ const Employees = () => {
         </Button>
       </div>
       
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+      <div className="flex gap-4 items-center">
         <Input
           placeholder="Search employees..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full md:w-80"
         />
-
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "justify-start text-left",
-                dateRange.from && "text-primary"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
-                  </>
-                ) : (
-                  format(dateRange.from, "MMM d, yyyy")
-                )
-              ) : (
-                <span>Filter by join date</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange.from}
-              selected={dateRange}
-              onSelect={handleDateRangeChange}
-              numberOfMonths={2}
-              className={cn("p-3 pointer-events-auto")}
-            />
-            <div className="p-3 border-t border-border flex justify-between">
-              <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>
-              <Button size="sm" onClick={() => document.body.click()}>Apply</Button>
-            </div>
-          </PopoverContent>
-        </Popover>
       </div>
       
       <div className="border rounded-lg">
@@ -381,7 +297,6 @@ const Employees = () => {
               <TableHead>Name</TableHead>
               <TableHead>Position</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Join Date</TableHead>
               <TableHead className="text-right">Claims</TableHead>
               <TableHead className="text-right">Performance</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -394,7 +309,6 @@ const Employees = () => {
                 <TableCell className="font-medium">{employee.name}</TableCell>
                 <TableCell>{employee.position}</TableCell>
                 <TableCell>{employee.email}</TableCell>
-                <TableCell>{format(employee.joinDate, "MMM d, yyyy")}</TableCell>
                 <TableCell className="text-right">{employee.claims}</TableCell>
                 <TableCell className="text-right">{employee.performance}%</TableCell>
                 <TableCell className="text-right">

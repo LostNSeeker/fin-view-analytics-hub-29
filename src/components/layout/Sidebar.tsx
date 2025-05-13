@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 interface SidebarProps {
-  isOpen: boolean;
+  sidebarState: 'expanded' | 'collapsed' | 'closed';
   toggleSidebar: () => void;
 }
 
@@ -24,25 +24,30 @@ interface SidebarItemProps {
   label: string;
   to: string;
   isActive: boolean;
+  isCollapsed: boolean;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, to, isActive }) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, to, isActive, isCollapsed }) => {
   return (
     <Link
       to={to}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent whitespace-nowrap",
-        isActive && "bg-sidebar-accent font-medium"
+        isActive && "bg-sidebar-accent font-medium",
+        isCollapsed && "justify-center px-3"
       )}
+      title={isCollapsed ? label : undefined}
     >
       <Icon className="h-5 w-5" />
-      <span className="transition-opacity duration-200">{label}</span>
+      {!isCollapsed && <span className="transition-opacity duration-200">{label}</span>}
     </Link>
   );
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ sidebarState, toggleSidebar }) => {
   const location = useLocation();
+  const isCollapsed = sidebarState === 'collapsed';
+  const isHidden = sidebarState === 'closed';
   
   const mainNavItems = [
     { icon: Home, label: 'Dashboard', path: '/' },
@@ -63,48 +68,65 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
     <aside
       className={cn(
         "bg-sidebar fixed inset-y-0 z-50 flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
-        isOpen ? "w-64" : "w-16"
+        isCollapsed ? "w-16" : isHidden ? "w-0" : "w-64"
       )}
     >
-      <div className="flex h-16 items-center justify-between px-4">
-        <div className={cn("flex items-center gap-2", !isOpen && "justify-center w-full")}>
+      <div className={cn("flex h-16 items-center", 
+        isCollapsed ? "justify-center px-4" : "justify-between px-4",
+        isHidden && "hidden"
+      )}>
+        {!isCollapsed ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center">
+                <span className="text-white font-bold text-sm">FC</span>
+              </div>
+              <span className="text-lg font-semibold text-sidebar-foreground">FinInsight</span>
+            </div>
+          </>
+        ) : (
           <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center">
             <span className="text-white font-bold text-sm">FC</span>
           </div>
-          {isOpen && <span className="text-lg font-semibold text-sidebar-foreground">FinInsight</span>}
-        </div>
+        )}
       </div>
       
-      <div className="flex-1 overflow-y-auto py-4 px-3">
-        <div className="space-y-1">
-          {mainNavItems.map((item) => (
-            <SidebarItem
-              key={item.path}
-              icon={item.icon}
-              label={item.label}
-              to={item.path}
-              isActive={location.pathname === item.path}
-            />
-          ))}
-        </div>
-        
-        <div className="mt-6 pt-6 border-t border-sidebar-border">
-          <p className={cn("px-3 text-xs font-medium text-sidebar-foreground/60 mb-2", !isOpen && 'hidden')}>
-            Management
-          </p>
+      {!isHidden && (
+        <div className="flex-1 overflow-y-auto py-4 px-3">
           <div className="space-y-1">
-            {secondaryNavItems.map((item) => (
+            {mainNavItems.map((item) => (
               <SidebarItem
                 key={item.path}
                 icon={item.icon}
                 label={item.label}
                 to={item.path}
                 isActive={location.pathname === item.path}
+                isCollapsed={isCollapsed}
               />
             ))}
           </div>
+          
+          <div className={cn("mt-6 pt-6 border-t border-sidebar-border", isCollapsed && "text-center")}>
+            {!isCollapsed && (
+              <p className="px-3 text-xs font-medium text-sidebar-foreground/60 mb-2">
+                Management
+              </p>
+            )}
+            <div className="space-y-1">
+              {secondaryNavItems.map((item) => (
+                <SidebarItem
+                  key={item.path}
+                  icon={item.icon}
+                  label={item.label}
+                  to={item.path}
+                  isActive={location.pathname === item.path}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 };

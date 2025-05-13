@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface FilterOption {
   value: string;
@@ -20,6 +23,11 @@ export interface FiltersState {
   selectedTimes: string[];
 }
 
+interface DateRange {
+  from: Date | undefined;
+  to: Date | undefined;
+}
+
 interface ClaimsFilterProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
@@ -33,6 +41,8 @@ interface ClaimsFilterProps {
   surveyerOptions: FilterOption[];
   statusOptions: FilterOption[];
   timeOptions: FilterOption[];
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange) => void;
 }
 
 export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
@@ -48,6 +58,8 @@ export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
   surveyerOptions,
   statusOptions,
   timeOptions,
+  dateRange = { from: undefined, to: undefined },
+  onDateRangeChange = () => {},
 }) => {
   // Helper function to toggle selection
   const toggleSelection = (value: string, selectedArray: string[], setFunction: (values: string[]) => void) => {
@@ -69,11 +81,15 @@ export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
       selectedTimes: [],
     });
     setSearchTerm('');
+    onDateRangeChange({ from: undefined, to: undefined });
   };
 
   // Count applied filters
   const getAppliedFiltersCount = () => {
-    return Object.values(filtersState).reduce((count, filterArray) => count + filterArray.length, 0);
+    let count = Object.values(filtersState).reduce((count, filterArray) => count + filterArray.length, 0);
+    // Add date range if it's applied
+    if (dateRange.from || dateRange.to) count++;
+    return count;
   };
 
   // Update specific filter sets
@@ -104,6 +120,20 @@ export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
       ...selectedTimes.map(time => ({ type: 'Time', value: time })),
     ];
 
+    // Add date range badge if dates are selected
+    if (dateRange.from || dateRange.to) {
+      let dateRangeText = '';
+      if (dateRange.from && dateRange.to) {
+        dateRangeText = `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}`;
+      } else if (dateRange.from) {
+        dateRangeText = `From ${format(dateRange.from, 'PP')}`;
+      } else if (dateRange.to) {
+        dateRangeText = `Until ${format(dateRange.to, 'PP')}`;
+      }
+      
+      allBadges.push({ type: 'Date', value: dateRangeText });
+    }
+
     if (allBadges.length === 0) return null;
 
     return (
@@ -117,13 +147,17 @@ export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
             <button 
               className="ml-1 hover:text-red-500"
               onClick={() => {
-                const filterType = badge.type.toLowerCase() as keyof FiltersState;
-                const currentArray = filtersState[`selected${badge.type}s` as keyof FiltersState];
-                if (Array.isArray(currentArray)) {
-                  updateFilter(
-                    `selected${badge.type}s` as keyof FiltersState, 
-                    currentArray.filter(item => item !== badge.value)
-                  );
+                if (badge.type === 'Date') {
+                  onDateRangeChange({ from: undefined, to: undefined });
+                } else {
+                  const filterType = badge.type.toLowerCase() as keyof FiltersState;
+                  const currentArray = filtersState[`selected${badge.type}s` as keyof FiltersState];
+                  if (Array.isArray(currentArray)) {
+                    updateFilter(
+                      `selected${badge.type}s` as keyof FiltersState, 
+                      currentArray.filter(item => item !== badge.value)
+                    );
+                  }
                 }
               }}
             >
@@ -143,6 +177,50 @@ export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
 
   const renderFilterPopoverContent = () => (
     <div className="w-[300px] p-4 space-y-6">
+      <div>
+        <h4 className="font-medium mb-2">Date Range</h4>
+        <div className="space-y-2">
+          <div className="grid gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dateRange && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "PP")} - {format(dateRange.to, "PP")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "PP")
+                    )
+                  ) : (
+                    <span>Pick a date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={onDateRangeChange}
+                  numberOfMonths={2}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      </div>
+      
       <div>
         <h4 className="font-medium mb-2">Client</h4>
         <div className="space-y-2">
@@ -325,6 +403,26 @@ export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
         </div>
         
         <div className="flex gap-2 items-center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                Date Range
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={onDateRangeChange}
+                numberOfMonths={2}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">

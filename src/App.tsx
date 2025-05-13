@@ -16,92 +16,95 @@ import HelpCenter from "@/pages/HelpCenter";
 import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
+import { ToasterProvider } from "@/hooks/use-toast";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route 
-            path="/" 
-            element={
-              <MainLayout>
-                <Dashboard />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/claims" 
-            element={
-              <MainLayout>
-                <Claims />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/analytics" 
-            element={
-              <MainLayout>
-                <Analytics />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/settings" 
-            element={
-              <MainLayout>
-                <Settings />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/employees" 
-            element={
-              <MainLayout>
-                <Employees />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <MainLayout>
-                <Settings />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/help" 
-            element={
-              <MainLayout>
-                <HelpCenter />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/customers" 
-            element={
-              <MainLayout>
-                <CustomerList />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/notifications" 
-            element={
-              <MainLayout>
-                <Notifications />
-              </MainLayout>
-            } 
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <ToasterProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/" 
+              element={
+                <MainLayout>
+                  <Dashboard />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/claims" 
+              element={
+                <MainLayout>
+                  <Claims />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
+                <MainLayout>
+                  <Analytics />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <MainLayout>
+                  <Settings />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/employees" 
+              element={
+                <MainLayout>
+                  <Employees />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <MainLayout>
+                  <Settings />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/help" 
+              element={
+                <MainLayout>
+                  <HelpCenter />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/customers" 
+              element={
+                <MainLayout>
+                  <CustomerList />
+                </MainLayout>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <MainLayout>
+                  <Notifications />
+                </MainLayout>
+              } 
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ToasterProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

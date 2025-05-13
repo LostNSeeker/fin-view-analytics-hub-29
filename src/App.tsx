@@ -15,7 +15,6 @@ import CustomerList from "@/pages/CustomerList";
 import HelpCenter from "@/pages/HelpCenter";
 import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
-import Login from "@/pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +25,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
           <Route 
             path="/" 
             element={

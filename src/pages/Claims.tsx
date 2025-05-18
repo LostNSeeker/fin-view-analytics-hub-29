@@ -102,7 +102,7 @@ const Claims = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Document Management</h1>
+          <h1 className="text-2xl font-bold">Claims Management</h1>
           <p className="text-gray-500">Showing {filteredDocuments.length} documents</p>
         </div>
         

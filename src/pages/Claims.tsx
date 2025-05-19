@@ -8,15 +8,17 @@ import { ClaimTypeSelector } from '@/components/claims/ClaimTypeSelector';
 import { ClaimsFilter, FiltersState } from '@/components/claims/ClaimsFilter';
 import { DocumentGrid } from '@/components/claims/DocumentGrid';
 import { DocumentTable } from '@/components/claims/DocumentTable';
-import { 
-  documentsData, 
-  clientOptions, 
-  typeOptions, 
-  insurerOptions, 
-  surveyerOptions, 
-  statusOptions, 
-  timeOptions 
-} from '@/data/claimsData';
+// import { 
+//   documentsData, 
+//   clientOptions, 
+//   typeOptions, 
+//   insurerOptions, 
+//   surveyerOptions, 
+//   statusOptions, 
+//   timeOptions 
+// } from '@/data/claimsData';
+
+import { useClaims } from '@/hooks/useClaims'; // imported useclaim hook 
 
 const Claims = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,6 +33,10 @@ const Claims = () => {
     from: undefined,
     to: undefined,
   });
+
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const { claims = [], totalClaims, loading } = useClaims(page, limit, searchTerm);
   
   // Multi-select filters
   const [filtersState, setFiltersState] = useState<FiltersState>({
@@ -42,39 +48,39 @@ const Claims = () => {
     selectedTimes: [],
   });
   
-  const filteredDocuments = documentsData.filter((doc) => {
-    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          doc.claimId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          doc.reportNo?.toLowerCase().includes(searchTerm.toLowerCase());
+  // const filteredDocuments = documentsData.filter((doc) => {
+  //   const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //                         doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //                         doc.claimId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //                         doc.reportNo?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const { selectedClients, selectedTypes, selectedInsurers, selectedSurveyers, selectedStatuses, selectedTimes } = filtersState;
+  //   const { selectedClients, selectedTypes, selectedInsurers, selectedSurveyers, selectedStatuses, selectedTimes } = filtersState;
     
-    const matchesClient = selectedClients.length === 0 || selectedClients.includes(doc.client);
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(doc.type);
-    const matchesInsurer = selectedInsurers.length === 0 || (doc.insurer && selectedInsurers.includes(doc.insurer));
-    const matchesSurveyer = selectedSurveyers.length === 0 || (doc.surveyer && selectedSurveyers.includes(doc.surveyer));
-    const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(doc.status);
-    const matchesTime = selectedTimes.length === 0;
+  //   const matchesClient = selectedClients.length === 0 || selectedClients.includes(doc.client);
+  //   const matchesType = selectedTypes.length === 0 || selectedTypes.includes(doc.type);
+  //   const matchesInsurer = selectedInsurers.length === 0 || (doc.insurer && selectedInsurers.includes(doc.insurer));
+  //   const matchesSurveyer = selectedSurveyers.length === 0 || (doc.surveyer && selectedSurveyers.includes(doc.surveyer));
+  //   const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(doc.status);
+  //   const matchesTime = selectedTimes.length === 0;
     
-    // Date range filter
-    let matchesDateRange = true;
-    if (dateRange.from || dateRange.to) {
-      const docDate = doc.dateModified ? new Date(doc.dateModified) : null;
+  //   // Date range filter
+  //   let matchesDateRange = true;
+  //   if (dateRange.from || dateRange.to) {
+  //     const docDate = doc.dateModified ? new Date(doc.dateModified) : null;
       
-      if (docDate) {
-        if (dateRange.from && dateRange.to) {
-          matchesDateRange = docDate >= dateRange.from && docDate <= dateRange.to;
-        } else if (dateRange.from) {
-          matchesDateRange = docDate >= dateRange.from;
-        } else if (dateRange.to) {
-          matchesDateRange = docDate <= dateRange.to;
-        }
-      }
-    }
+  //     if (docDate) {
+  //       if (dateRange.from && dateRange.to) {
+  //         matchesDateRange = docDate >= dateRange.from && docDate <= dateRange.to;
+  //       } else if (dateRange.from) {
+  //         matchesDateRange = docDate >= dateRange.from;
+  //       } else if (dateRange.to) {
+  //         matchesDateRange = docDate <= dateRange.to;
+  //       }
+  //     }
+  //   }
     
-    return matchesSearch && matchesClient && matchesType && matchesInsurer && matchesSurveyer && matchesStatus && matchesTime && matchesDateRange;
-  });
+  //   return matchesSearch && matchesClient && matchesType && matchesInsurer && matchesSurveyer && matchesStatus && matchesTime && matchesDateRange;
+  // });
 
   const handleSelectType = (type: string) => {
     setSelectedClaimType(type);
@@ -103,7 +109,7 @@ const Claims = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Document Management</h1>
-          <p className="text-gray-500">Showing {filteredDocuments.length} documents</p>
+          {/* <p className="text-gray-500">Showing {filteredDocuments.length} documents</p> */}
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
@@ -136,7 +142,7 @@ const Claims = () => {
         </Dialog>
       </div>
       
-      <ClaimsFilter
+      {/* <ClaimsFilter
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         filtersState={filtersState}
@@ -152,12 +158,22 @@ const Claims = () => {
         dateRange={dateRange}
         onDateRangeChange={handleDateRangeChange}
       />
-      
+       */}
       {viewMode === 'grid' ? (
-        <DocumentGrid documents={filteredDocuments} />
+        <DocumentGrid documents={claims} />
       ) : (
-        <DocumentTable documents={filteredDocuments} />
+        <DocumentTable documents={claims} />
       )}
+      {/* Pagination UI */}
+      <div className="flex justify-center space-x-4 pt-4">
+        <Button onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+          Previous
+        </Button>
+        <span>Page {page}</span>
+        <Button onClick={() => setPage((p) => p + 1)} disabled={claims.length < limit}>
+          Next
+        </Button>
+      </div>
     </div>
   );
 };

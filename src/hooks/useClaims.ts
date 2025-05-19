@@ -11,9 +11,12 @@ export const useClaims = (page: number, limit: number, searchTerm: string) => {
     const fetchClaims = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/api/claims?page=${page}&limit=${limit}&search=${searchTerm}`);
-        setClaims(response.data.claims);         // assuming response { claims: [], total: number }
-        setTotalClaims(response.data.total);
+        const response = await axios.get(`http://localhost:3000/api/claims?page=${page}&limit=${limit}&search=${searchTerm}`);
+        
+        const data = response.data;
+
+        setClaims(data.data);                                // Set claim array
+        setTotalClaims(data.pagination?.total || 0);         // Set total from pagination
       } catch (error) {
         console.error('Error fetching claims:', error);
       }
@@ -25,4 +28,3 @@ export const useClaims = (page: number, limit: number, searchTerm: string) => {
 
   return { claims, totalClaims, loading };
 };
-

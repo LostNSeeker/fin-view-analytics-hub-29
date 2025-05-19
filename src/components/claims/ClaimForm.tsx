@@ -1,305 +1,343 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { File, Upload } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
+import { Claim } from "@/types/claim";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, FileUp, Plus, Save, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface ClaimFormProps {
-  documentType: string;
-  documentId: string;
-  skipTypeSelection?: boolean;
+  claim?: Claim;
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
 }
 
-export const ClaimForm: React.FC<ClaimFormProps> = ({ documentType, documentId, skipTypeSelection = false }) => {
-  const [formData, setFormData] = useState({
-    reportNo: documentId === 'New' ? '' : `REP-${documentId.split('-')[2] || '001'}`,
-    claimId: documentId === 'New' ? '' : `CLM-${documentId.split('-')[2] || '001'}`,
-    customerName: '',
-    customerId: '',
-    email: '',
-    phone: '',
-    address: '',
-    claimType: documentType,
-    insurer: '',
-    insured: '',
-    surveyer: '',
-    dateOfDeputation: '',
-    amount: '',
-    description: '',
-    incidentDate: '',
-    status: 'Pending',
+const ClaimForm = ({ claim, onSubmit, onCancel }: ClaimFormProps) => {
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
+  
+  const form = useForm({
+    defaultValues: claim ? {
+      ...claim
+    } : {
+      title: "",
+      description: "",
+      policyId: "",
+      status: "pending",
+      insurer: "",
+      insured: "",
+      reportNo: "",
+      surveyor: "",
+      dateFiled: new Date(),
+    }
   });
-  
-  const { toast } = useToast();
-  
-  // Update claimType when documentType prop changes
-  useEffect(() => {
-    setFormData(prev => ({ ...prev, claimType: documentType }));
-  }, [documentType]);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
+
+  const handleDiscard = () => {
+    setIsDiscardDialogOpen(true);
   };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // In a real app, you would submit the form data to your backend
-    console.log('Form submitted:', formData);
-    
-    toast({
-      title: "Claim Submitted",
-      description: `Claim ${formData.claimId || documentId} has been successfully submitted.`,
-      duration: 5000,
-    });
-  };
-  
+
   return (
-    <form className="space-y-4 py-4" onSubmit={handleSubmit}>
-      <Tabs defaultValue="claim">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="claim">Claim Details</TabsTrigger>
-          <TabsTrigger value="customer">Customer Details</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="claim" className="space-y-4 pt-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="reportNo">Report No</Label>
-              <Input 
-                id="reportNo" 
-                value={formData.reportNo} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="claimId">Claim ID</Label>
-              <Input 
-                id="claimId" 
-                value={formData.claimId} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="claimType">Claim Type</Label>
-              <Select 
-                value={formData.claimType} 
-                onValueChange={(value) => handleSelectChange('claimType', value)}
-                disabled={skipTypeSelection}
-              >
-                <SelectTrigger id="claimType">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Policy">Policy</SelectItem>
-                  <SelectItem value="Claim">Claim</SelectItem>
-                  <SelectItem value="Contract">Contract</SelectItem>
-                  <SelectItem value="Application">Application</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="insurer">Insurer</Label>
-              <Select 
-                value={formData.insurer} 
-                onValueChange={(value) => handleSelectChange('insurer', value)}
-              >
-                <SelectTrigger id="insurer">
-                  <SelectValue placeholder="Select insurer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Global Insurance Ltd">Global Insurance Ltd</SelectItem>
-                  <SelectItem value="SafeGuard Insurers">SafeGuard Insurers</SelectItem>
-                  <SelectItem value="Premium Insurance Co">Premium Insurance Co</SelectItem>
-                  <SelectItem value="MediCare Insurance">MediCare Insurance</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="insured">Insured</Label>
-              <Input 
-                id="insured" 
-                value={formData.insured} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">Claim Amount</Label>
-              <Input 
-                id="amount" 
-                type="number" 
-                value={formData.amount} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="surveyer">Surveyer</Label>
-              <Select 
-                value={formData.surveyer} 
-                onValueChange={(value) => handleSelectChange('surveyer', value)}
-              >
-                <SelectTrigger id="surveyer">
-                  <SelectValue placeholder="Select surveyer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Robert Johnson">Robert Johnson</SelectItem>
-                  <SelectItem value="Michael Brown">Michael Brown</SelectItem>
-                  <SelectItem value="David Wilson">David Wilson</SelectItem>
-                  <SelectItem value="Jennifer Davis">Jennifer Davis</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dateOfDeputation">Date of Deputation</Label>
-              <Input 
-                id="dateOfDeputation" 
-                type="date" 
-                value={formData.dateOfDeputation} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => handleSelectChange('status', value)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="incidentDate">Incident Date</Label>
-              <Input 
-                id="incidentDate" 
-                type="date" 
-                value={formData.incidentDate} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea 
-              id="description" 
-              value={formData.description} 
-              onChange={handleChange} 
-              required 
-              className="min-h-[100px]"
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="customer" className="space-y-4 pt-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customerName">Customer Name</Label>
-              <Input 
-                id="customerName" 
-                value={formData.customerName} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerId">Customer ID</Label>
-              <Input 
-                id="customerId" 
-                value={formData.customerId} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={formData.email} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input 
-                id="phone" 
-                value={formData.phone} 
-                onChange={handleChange} 
-                required 
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea 
-              id="address" 
-              value={formData.address} 
-              onChange={handleChange} 
-              required 
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="documents" className="space-y-4 pt-4">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Claim Photos/Documents</Label>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                  <File className="mx-auto h-10 w-10 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-600">Drag files here or click to upload</p>
-                  <Input id="file" type="file" className="hidden" />
-                  <Button type="button" variant="outline" size="sm" className="mt-4">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Browse Files
-                  </Button>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader>
+                <CardTitle>{claim ? "Edit Claim" : "New Claim"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Claim Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter claim title" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Enter claim description" 
+                            className="min-h-32" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Claim Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="policyId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Policy Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter policy number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="inReview">In Review</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="reportNo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Report Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter report number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dateFiled"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date Filed</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={new Date(field.value)}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Party Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="insurer"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Insurer</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter insurer name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="insured"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Insured</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter insured name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="surveyor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Surveyor</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter surveyor name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="assignedEmployee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned Employee</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter employee name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Documents</CardTitle>
+                <Button size="sm" className="flex items-center">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add File
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="border border-dashed p-8 rounded-md flex flex-col items-center justify-center text-center">
+                  <FileUp className="h-8 w-8 text-gray-400 mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Drag & drop files here, or click to select files
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Supports: PDF, Images, Word Documents (max 10MB)
+                  </p>
+                </div>
+
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Uploaded Files</h4>
+                  <div className="text-sm text-muted-foreground">
+                    No files uploaded yet
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline">Cancel</Button>
-        <Button type="submit" className="bg-fin-blue hover:bg-fin-dark-blue">Submit Claim</Button>
-      </div>
-    </form>
+
+          <div className="mt-6 flex justify-end space-x-2">
+            <Button variant="outline" type="button" onClick={handleDiscard}>
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+            <Button type="submit">
+              <Save className="mr-2 h-4 w-4" />
+              {claim ? "Update Claim" : "Create Claim"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+
+      <AlertDialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Any unsaved changes will be lost. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Editing</AlertDialogCancel>
+            <AlertDialogAction onClick={onCancel}>Discard Changes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
+
+export default ClaimForm;

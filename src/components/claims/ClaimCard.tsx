@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import { formatDate } from "@/lib/date-utils";
-import { Claim,ClaimPriority } from "@/types/claim";
+import { Claim, ClaimPriority, ClaimStatus } from "@/types/claim";
 
 interface ClaimCardProps {
   claim: Claim;
@@ -47,7 +47,7 @@ const ClaimCard = ({ claim }: ClaimCardProps) => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground font-mono">#{claim.claimId}</p>
-          <StatusBadge status={claim.status} />
+          <StatusBadge status={claim.status as any} />
         </div>
         <div className="flex items-center justify-between">
           <Link to={`/claims/${claim.claimId}`}>
@@ -77,7 +77,9 @@ const ClaimCard = ({ claim }: ClaimCardProps) => {
 
         <div className="flex items-center space-x-2 text-sm">
           <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <span className="text-muted-foreground truncate">{claim.policyType.name}</span>
+          <span className="text-muted-foreground truncate">
+            {claim.policyType && claim.policyType.name ? claim.policyType.name : "N/A"}
+          </span>
         </div>
       </CardContent>
       

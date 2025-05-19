@@ -1,4 +1,4 @@
-export type ClaimStatus = "pending" | "approved" | "rejected" | "inReview" | "Completed" | "Approved" | "In Progress";
+export type ClaimStatus = "pending" | "approved" | "rejected" | "inReview" | "Completed" | "Approved" | "In Progress" |"completed" |"Pending" |'"Completed"';
 
 export type ClaimPriority = "Low" | "Medium" | "High";
 

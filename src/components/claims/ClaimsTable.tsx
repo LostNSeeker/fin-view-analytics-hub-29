@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Table, 
@@ -138,7 +137,10 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
             <TableCell className="font-medium max-w-48 truncate" title={claim.details}>
               {claim.details}
             </TableCell>
-            <TableCell><StatusBadge status={claim.status} /></TableCell>
+            <TableCell>
+              {/* Convert the status to a known valid StatusBadge status if needed */}
+              <StatusBadge status={claim.status as any} />
+            </TableCell>
             <TableCell><PriorityBadge priority={claim.priority} /></TableCell>
             <TableCell>{claim.clientName}</TableCell>
             <TableCell>{claim.assignedEmployee}</TableCell>

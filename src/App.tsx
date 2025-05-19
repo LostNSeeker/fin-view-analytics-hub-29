@@ -52,21 +52,22 @@ const App = () => (
               </MainLayout>
             } 
           />
-          <Route 
-            path="/claims/:id" 
-            element={
-              <MainLayout>
-                <ClaimDetail />
-              </MainLayout>
-            } 
-          />
-          <Route 
-            path="/claims/edit/:id" 
+          <Route
+            path="/claims/edit/:id"
             element={
               <MainLayout>
                 <ClaimForm />
               </MainLayout>
-            } 
+            }
+          />
+        
+          <Route
+            path="/claims/:id"
+            element={
+              <MainLayout>
+                <ClaimDetail />
+              </MainLayout>
+            }
           />
           <Route 
             path="/analytics" 

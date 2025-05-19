@@ -156,14 +156,14 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to={`${Server}/claims/${claim.claimId}`} className="flex items-center">
+                <DropdownMenuItem asChild>
+                    <Link to={`/claims/${claim.claimId}`} className="flex items-center">
                       <Eye className="mr-2 h-4 w-4" />
                       <span>View</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to={`${Server}/claims/edit/${claim.claimId}`} className="flex items-center">
+                    <Link to={`/claims/edit/${claim.claimId}`} className="flex items-center">
                       <Pencil className="mr-2 h-4 w-4" />
                       <span>Edit</span>
                     </Link>

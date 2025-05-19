@@ -79,20 +79,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ sidebarState, toggleSidebar })
           <>
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center">
-                <span className="text-white font-bold text-sm">FC</span>
+                <span className="text-white font-bold text-sm">GI</span>
               </div>
-              <span className="text-lg font-semibold text-sidebar-foreground">FinInsight</span>
+              <span className="text-lg font-semibold text-sidebar-foreground">Gondalia Insurance</span>
             </div>
           </>
         ) : (
           <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center">
-            <span className="text-white font-bold text-sm">FC</span>
+            <span className="text-white font-bold text-sm">GI</span>
           </div>
         )}
       </div>
       
       {!isHidden && (
-        <div className="flex-1 overflow-y-auto py-4 px-3">
+        <div className="flex-1  py-4 px-3">
           <div className="space-y-1">
             {mainNavItems.map((item) => (
               <SidebarItem

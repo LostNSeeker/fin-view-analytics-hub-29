@@ -94,6 +94,9 @@ const ClaimForm = ({ claim, onCancel }) => {
           fetch('http://localhost:3000/api/employees'),
           fetch('http://localhost:3000/api/policy-types')
         ]);
+        console.log(customersRes);
+        console.log( employeesRes );
+        console.log( policyTypesRes);
 
         if (!customersRes.ok || !employeesRes.ok || !policyTypesRes.ok) {
           throw new Error("Failed to fetch data");

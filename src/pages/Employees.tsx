@@ -32,7 +32,7 @@ const employeesData = [
     id: 'EMP-001',
     name: 'John Smith',
     position: 'Senior Claims Adjuster',
-    email: 'john.smith@finview.com',
+    email: 'john.smith@gondalia.com',
     phone: '(555) 123-4567',
     claims: 58,
     performance: 95,
@@ -44,7 +44,7 @@ const employeesData = [
     id: 'EMP-002',
     name: 'Emily Davis',
     position: 'Claims Specialist',
-    email: 'emily.davis@finview.com',
+    email: 'emily.davis@gondalia.com',
     phone: '(555) 234-5678',
     claims: 45,
     performance: 90,
@@ -56,7 +56,7 @@ const employeesData = [
     id: 'EMP-003',
     name: 'Robert Wilson',
     position: 'Claims Analyst',
-    email: 'robert.wilson@finview.com',
+    email: 'robert.wilson@gondalia.com',
     phone: '(555) 345-6789',
     claims: 39,
     performance: 82,
@@ -68,7 +68,7 @@ const employeesData = [
     id: 'EMP-004',
     name: 'Jessica White',
     position: 'Senior Claims Analyst',
-    email: 'jessica.white@finview.com',
+    email: 'jessica.white@gondalia.com',
     phone: '(555) 456-7890',
     claims: 52,
     performance: 88,
@@ -80,7 +80,7 @@ const employeesData = [
     id: 'EMP-005',
     name: 'Michael Brown',
     position: 'Claims Adjuster',
-    email: 'michael.brown@finview.com',
+    email: 'michael.brown@gondalia.com',
     phone: '(555) 567-8901',
     claims: 47,
     performance: 85,
@@ -238,7 +238,7 @@ const Employees = () => {
     employee.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const openEmployeeDetails = (employee: any) => {
+  const openEmployeeDetails = (employee) => {
     setSelectedEmployee(employee);
     setIsDialogOpen(true);
   };
@@ -375,7 +375,7 @@ const Employees = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="employee@finview.com" {...field} />
+                      <Input placeholder="employee@gondalia.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

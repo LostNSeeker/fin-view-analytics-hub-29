@@ -97,7 +97,7 @@ const ClaimForm = ({ claim, onCancel }) => {
         console.log(customersRes);
         console.log( employeesRes );
         console.log( policyTypesRes);
-
+        
         if (!customersRes.ok || !employeesRes.ok || !policyTypesRes.ok) {
           throw new Error("Failed to fetch data");
         }

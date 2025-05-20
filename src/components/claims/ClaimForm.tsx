@@ -30,15 +30,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, FileUp, Plus, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { log } from "node:console";
 
-const ClaimForm = ({ claim, onCancel }) => {
+const ClaimForm = ({ claim, onSubmit, onCancel }) => {
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -50,9 +50,9 @@ const ClaimForm = ({ claim, onCancel }) => {
   // Form default values based on the API structure
   const defaultValues = claim ? {
     details: claim.details,
-    customer_id: claim.customer_id.toString(),
-    employee_id: claim.employee_id.toString(),
-    policy_id: claim.policy_id.toString(),
+    customer_id: claim.customer_id ? claim.customer_id.toString() : "",
+    employee_id: claim.employee_id ? claim.employee_id.toString() : "",
+    policy_id: claim.policy_id ? claim.policy_id.toString() : "",
     docs: claim.docs || {
       photoEvidence: false,
       estimateProvided: false
@@ -94,9 +94,6 @@ const ClaimForm = ({ claim, onCancel }) => {
           fetch('http://localhost:3000/api/employees'),
           fetch('http://localhost:3000/api/policy-types')
         ]);
-        console.log(customersRes);
-        console.log( employeesRes );
-        console.log( policyTypesRes);
         
         if (!customersRes.ok || !employeesRes.ok || !policyTypesRes.ok) {
           throw new Error("Failed to fetch data");
@@ -107,10 +104,18 @@ const ClaimForm = ({ claim, onCancel }) => {
           employeesRes.json(),
           policyTypesRes.json()
         ]);
+         
+         //
+         console.log("1",policyTypesData.data );
+         console.log("2",policyTypesData.data[0] );
+         console.log("3",policyTypesData.data[0].data);
+         console.log("4",policyTypesData.data[0].data.name);
+         
 
-        setCustomers(customersData);
-        setEmployees(employeesData);
-        setPolicyTypes(policyTypesData);
+        // Fixed: Handling the nested customer structure from the controller
+        setCustomers(customersData.customers || []);
+        setEmployees(employeesData || []);
+        setPolicyTypes(policyTypesData.data || []);
       } catch (error) {
         console.error("Error fetching form data:", error);
         toast({
@@ -140,6 +145,13 @@ const ClaimForm = ({ claim, onCancel }) => {
         }
       };
 
+      // If we're using the parent component's onSubmit handler
+      if (onSubmit) {
+        onSubmit(preparedData);
+        return;
+      }
+
+      // Otherwise use the internal API call
       const response = await fetch('http://localhost:3000/api/claims', {
         method: claim ? 'PUT' : 'POST',
         headers: {
@@ -240,7 +252,7 @@ const ClaimForm = ({ claim, onCancel }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {customers.map(customer => (
+                          {customers && customers.map(customer => (
                             <SelectItem key={customer.id} value={customer.id.toString()}>
                               {customer.name}
                             </SelectItem>
@@ -268,7 +280,7 @@ const ClaimForm = ({ claim, onCancel }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {employees.map(employee => (
+                          {employees && employees.map(employee => (
                             <SelectItem key={employee.id} value={employee.id.toString()}>
                               {employee.name} - {employee.position}
                             </SelectItem>
@@ -296,7 +308,7 @@ const ClaimForm = ({ claim, onCancel }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {policyTypes.map(policy => (
+                          {policyTypes && policyTypes.map(policy => (
                             <SelectItem key={policy.id} value={policy.id.toString()}>
                               {policy.data.name}
                             </SelectItem>

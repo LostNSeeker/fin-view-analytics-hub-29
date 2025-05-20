@@ -1,35 +1,97 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import ClaimFormComponent from "@/components/claims/ClaimForm";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon } from "lucide-react";
-import { mockClaims } from "@/data/mockData";
+import { useState, useEffect } from "react";
 
 const ClaimFormPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [claim, setClaim] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const isEditing = id !== undefined;
-  const claim = isEditing ? mockClaims.find(c => c.claimId === id) : undefined;
   
-  const handleSubmit = (data: any) => {
+  // Fetch claim data if editing
+  useEffect(() => {
     if (isEditing) {
-      toast({
-        title: "Claim updated",
-        description: `Claim ${id} has been updated successfully.`,
+      const fetchClaim = async () => {
+        setIsLoading(true);
+        try {
+          // Replace with your actual API endpoint
+          const response = await fetch(`http://localhost:3000/api/claims/${id}`);
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch claim");
+          }
+          
+          const claimData = await response.json();
+          setClaim(claimData);
+        } catch (error) {
+          console.error("Error fetching claim:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load claim data. Please try again later.",
+            variant: "destructive"
+          });
+          // Navigate back to claims list on error
+          navigate("/claims");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchClaim();
+    }
+  }, [id, isEditing, navigate, toast]);
+
+  const handleSubmit = async (data) => {
+    try {
+      setIsLoading(true);
+      // API endpoint
+      const endpoint = isEditing 
+        ? `http://localhost:3000/api/claims/${id}`
+        : 'http://localhost:3000/api/claims';
+      
+      // API method
+      const method = isEditing ? 'PUT' : 'POST';
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(isEditing ? { ...data, id } : data),
       });
-      navigate(`/claims/${id}`);
-    } else {
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save claim");
+      }
+      
+      const savedClaim = await response.json();
+      
       toast({
-        title: "Claim created",
-        description: "New claim has been created successfully.",
+        title: isEditing ? "Claim updated" : "Claim created",
+        description: `Claim has been ${isEditing ? "updated" : "created"} successfully.`,
       });
-      navigate("/claims");
+      
+      // Navigate to appropriate page after success
+      navigate(isEditing ? `/claims/${id}` : "/claims");
+    } catch (error) {
+      console.error("Error saving claim:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
   const handleCancel = () => {
     if (isEditing) {
       navigate(`/claims/${id}`);
@@ -37,6 +99,16 @@ const ClaimFormPage = () => {
       navigate("/claims");
     }
   };
+  
+  // Show loading state while fetching claim data for editing
+  if (isEditing && isLoading && !claim) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin text-xl">⏳</div>
+        <span className="ml-2">Loading claim data...</span>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -49,8 +121,8 @@ const ClaimFormPage = () => {
             {isEditing ? "Edit Claim" : "New Claim"}
           </h1>
         </div>
-        
-        <ClaimFormComponent 
+       
+        <ClaimFormComponent
           claim={claim}
           onSubmit={handleSubmit}
           onCancel={handleCancel}

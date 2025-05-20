@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import Dashboard from "@/pages/Dashboard";
-import Claims from "@/pages/Claims";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import Employees from "@/pages/Employees";
@@ -15,6 +14,10 @@ import CustomerList from "@/pages/CustomerList";
 import HelpCenter from "@/pages/HelpCenter";
 import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
+//
+import ClaimsList from "./pages/ClaimsList";
+import ClaimDetail from "./pages/ClaimDetail";
+import ClaimForm from "./pages/ClaimForm";
 
 const queryClient = new QueryClient();
 
@@ -37,9 +40,34 @@ const App = () => (
             path="/claims" 
             element={
               <MainLayout>
-                <Claims />
+                <ClaimsList />
               </MainLayout>
             } 
+          />
+          <Route 
+            path="/claims/new" 
+            element={
+              <MainLayout>
+                <ClaimForm />
+              </MainLayout>
+            } 
+          />
+          <Route
+            path="/claims/edit/:id"
+            element={
+              <MainLayout>
+                <ClaimForm />
+              </MainLayout>
+            }
+          />
+        
+          <Route
+            path="/claims/:id"
+            element={
+              <MainLayout>
+                <ClaimDetail />
+              </MainLayout>
+            }
           />
           <Route 
             path="/analytics" 

@@ -1,479 +1,174 @@
 
-import React from 'react';
-import { Search, Filter, CalendarIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-
-interface FilterOption {
-  value: string;
-  label: string;
-}
-
-export interface FiltersState {
-  selectedClients: string[];
-  selectedTypes: string[];
-  selectedInsurers: string[];
-  selectedSurveyers: string[];
-  selectedStatuses: string[];
-  selectedTimes: string[];
-}
-
-interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
-}
+import { useState } from "react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon, Search, X } from "lucide-react";
 
 interface ClaimsFilterProps {
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  filtersState: FiltersState;
-  setFiltersState: React.Dispatch<React.SetStateAction<FiltersState>>;
-  viewMode: 'grid' | 'list';
-  setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'list'>>;
-  clientOptions: FilterOption[];
-  typeOptions: FilterOption[];
-  insurerOptions: FilterOption[];
-  surveyerOptions: FilterOption[];
-  statusOptions: FilterOption[];
-  timeOptions: FilterOption[];
-  dateRange?: DateRange;
-  onDateRangeChange?: (range: DateRange) => void;
+  onFilterChange: (filters: any) => void;
 }
 
-export const ClaimsFilter: React.FC<ClaimsFilterProps> = ({
-  searchTerm,
-  setSearchTerm,
-  filtersState,
-  setFiltersState,
-  viewMode,
-  setViewMode,
-  clientOptions,
-  typeOptions,
-  insurerOptions,
-  surveyerOptions,
-  statusOptions,
-  timeOptions,
-  dateRange = { from: undefined, to: undefined },
-  onDateRangeChange = () => {},
-}) => {
-  // Helper function to toggle selection
-  const toggleSelection = (value: string, selectedArray: string[], setFunction: (values: string[]) => void) => {
-    if (selectedArray.includes(value)) {
-      setFunction(selectedArray.filter((item) => item !== value));
-    } else {
-      setFunction([...selectedArray, value]);
-    }
-  };
+const ClaimsFilter = ({ onFilterChange }: ClaimsFilterProps) => {
+  const [policyNumber, setPolicyNumber] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [employee, setEmployee] = useState("");
+  const [status, setStatus] = useState("all"); // Changed default value to "all"
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
-  // Reset all filters
-  const resetAllFilters = () => {
-    setFiltersState({
-      selectedClients: [],
-      selectedTypes: [],
-      selectedInsurers: [],
-      selectedSurveyers: [],
-      selectedStatuses: [],
-      selectedTimes: [],
+  const handleApplyFilters = () => {
+    onFilterChange({
+      policyNumber,
+      customerName,
+      employee,
+      status: status === "all" ? "" : status, // Convert "all" to empty string for filtering
+      dateFrom,
+      dateTo
     });
-    setSearchTerm('');
-    onDateRangeChange({ from: undefined, to: undefined });
   };
 
-  // Count applied filters
-  const getAppliedFiltersCount = () => {
-    let count = Object.values(filtersState).reduce((count, filterArray) => count + filterArray.length, 0);
-    // Add date range if it's applied
-    if (dateRange.from || dateRange.to) count++;
-    return count;
+  const handleResetFilters = () => {
+    setPolicyNumber("");
+    setCustomerName("");
+    setEmployee("");
+    setStatus("all"); // Reset to "all" instead of empty string
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    onFilterChange({});
   };
-
-  // Update specific filter sets
-  const updateFilter = (filterType: keyof FiltersState, values: string[]) => {
-    setFiltersState(prev => ({
-      ...prev,
-      [filterType]: values
-    }));
-  };
-
-  // Render filter badges
-  const renderFilterBadges = () => {
-    const {
-      selectedClients,
-      selectedTypes,
-      selectedInsurers,
-      selectedSurveyers,
-      selectedStatuses,
-      selectedTimes
-    } = filtersState;
-
-    const allBadges = [
-      ...selectedClients.map(client => ({ type: 'Client', value: client })),
-      ...selectedTypes.map(type => ({ type: 'Type', value: type })),
-      ...selectedInsurers.map(insurer => ({ type: 'Insurer', value: insurer })),
-      ...selectedSurveyers.map(surveyer => ({ type: 'Surveyer', value: surveyer })),
-      ...selectedStatuses.map(status => ({ type: 'Status', value: status })),
-      ...selectedTimes.map(time => ({ type: 'Time', value: time })),
-    ];
-
-    // Add date range badge if dates are selected
-    if (dateRange.from || dateRange.to) {
-      let dateRangeText = '';
-      if (dateRange.from && dateRange.to) {
-        dateRangeText = `${format(dateRange.from, 'PP')} - ${format(dateRange.to, 'PP')}`;
-      } else if (dateRange.from) {
-        dateRangeText = `From ${format(dateRange.from, 'PP')}`;
-      } else if (dateRange.to) {
-        dateRangeText = `Until ${format(dateRange.to, 'PP')}`;
-      }
-      
-      allBadges.push({ type: 'Date', value: dateRangeText });
-    }
-
-    if (allBadges.length === 0) return null;
-
-    return (
-      <div className="flex flex-wrap gap-2 mt-4">
-        {allBadges.map((badge, index) => (
-          <div 
-            key={index}
-            className="bg-gray-100 text-xs rounded-full px-3 py-1 flex items-center gap-1"
-          >
-            <span className="font-medium">{badge.type}:</span> {badge.value}
-            <button 
-              className="ml-1 hover:text-red-500"
-              onClick={() => {
-                if (badge.type === 'Date') {
-                  onDateRangeChange({ from: undefined, to: undefined });
-                } else {
-                  const filterType = badge.type.toLowerCase() as keyof FiltersState;
-                  const currentArray = filtersState[`selected${badge.type}s` as keyof FiltersState];
-                  if (Array.isArray(currentArray)) {
-                    updateFilter(
-                      `selected${badge.type}s` as keyof FiltersState, 
-                      currentArray.filter(item => item !== badge.value)
-                    );
-                  }
-                }
-              }}
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        <button 
-          className="text-xs text-blue-600 hover:underline"
-          onClick={resetAllFilters}
-        >
-          Clear All
-        </button>
-      </div>
-    );
-  };
-
-  const renderFilterPopoverContent = () => (
-    <div className="w-[300px] p-4 space-y-6">
-      <div>
-        <h4 className="font-medium mb-2">Date Range</h4>
-        <div className="space-y-2">
-          <div className="grid gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dateRange && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "PP")} - {format(dateRange.to, "PP")}
-                      </>
-                    ) : (
-                      format(dateRange.from, "PP")
-                    )
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={onDateRangeChange}
-                  numberOfMonths={2}
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Client</h4>
-        <div className="space-y-2">
-          {clientOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`client-${option.value}`} 
-                checked={filtersState.selectedClients.includes(option.value)} 
-                onCheckedChange={() => toggleSelection(
-                  option.value, 
-                  filtersState.selectedClients, 
-                  (values) => updateFilter('selectedClients', values)
-                )}
-              />
-              <label 
-                htmlFor={`client-${option.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {option.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Document Type</h4>
-        <div className="space-y-2">
-          {typeOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`type-${option.value}`} 
-                checked={filtersState.selectedTypes.includes(option.value)} 
-                onCheckedChange={() => toggleSelection(
-                  option.value, 
-                  filtersState.selectedTypes, 
-                  (values) => updateFilter('selectedTypes', values)
-                )}
-              />
-              <label 
-                htmlFor={`type-${option.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {option.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Insurer</h4>
-        <div className="space-y-2">
-          {insurerOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`insurer-${option.value}`} 
-                checked={filtersState.selectedInsurers.includes(option.value)} 
-                onCheckedChange={() => toggleSelection(
-                  option.value, 
-                  filtersState.selectedInsurers, 
-                  (values) => updateFilter('selectedInsurers', values)
-                )}
-              />
-              <label 
-                htmlFor={`insurer-${option.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {option.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Surveyer</h4>
-        <div className="space-y-2">
-          {surveyerOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`surveyer-${option.value}`} 
-                checked={filtersState.selectedSurveyers.includes(option.value)} 
-                onCheckedChange={() => toggleSelection(
-                  option.value, 
-                  filtersState.selectedSurveyers, 
-                  (values) => updateFilter('selectedSurveyers', values)
-                )}
-              />
-              <label 
-                htmlFor={`surveyer-${option.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {option.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Status</h4>
-        <div className="space-y-2">
-          {statusOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`status-${option.value}`} 
-                checked={filtersState.selectedStatuses.includes(option.value)} 
-                onCheckedChange={() => toggleSelection(
-                  option.value, 
-                  filtersState.selectedStatuses, 
-                  (values) => updateFilter('selectedStatuses', values)
-                )}
-              />
-              <label 
-                htmlFor={`status-${option.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {option.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Time Period</h4>
-        <div className="space-y-2">
-          {timeOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`time-${option.value}`} 
-                checked={filtersState.selectedTimes.includes(option.value)} 
-                onCheckedChange={() => toggleSelection(
-                  option.value, 
-                  filtersState.selectedTimes, 
-                  (values) => updateFilter('selectedTimes', values)
-                )}
-              />
-              <label 
-                htmlFor={`time-${option.value}`}
-                className="text-sm cursor-pointer"
-              >
-                {option.label}
-              </label>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="flex justify-between">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={resetAllFilters}
-        >
-          Reset All
-        </Button>
-        <Button 
-          size="sm" 
-          className="bg-fin-blue hover:bg-fin-dark-blue"
-        >
-          Apply Filters
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input 
-            placeholder="Search documents..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+    <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-100 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Policy Number</label>
+          <Input
+            placeholder="Enter policy number"
+            value={policyNumber}
+            onChange={(e) => setPolicyNumber(e.target.value)}
           />
         </div>
-        
-        <div className="flex gap-2 items-center">
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Customer Name</label>
+          <Input
+            placeholder="Enter customer name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Assigned Employee</label>
+          <Input
+            placeholder="Enter employee name"
+            value={employee}
+            onChange={(e) => setEmployee(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Status</label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="inReview">In Review</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Date From</label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                Date Range
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !dateFrom && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateFrom ? format(dateFrom, "PPP") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0">
               <Calendar
+                mode="single"
+                selected={dateFrom}
+                onSelect={setDateFrom}
                 initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={onDateRangeChange}
-                numberOfMonths={2}
-                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
-          
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Date To</label>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-                {getAppliedFiltersCount() > 0 && (
-                  <span className="bg-fin-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    {getAppliedFiltersCount()}
-                  </span>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !dateTo && "text-muted-foreground"
                 )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateTo ? format(dateTo, "PPP") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[350px] p-0" align="end">
-              {renderFilterPopoverContent()}
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={dateTo}
+                onSelect={setDateTo}
+                initialFocus
+              />
             </PopoverContent>
           </Popover>
-          
-          <div className="border rounded-md flex">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="icon"
-              className={viewMode === 'grid' ? 'bg-fin-blue hover:bg-fin-dark-blue rounded-r-none' : 'rounded-r-none'}
-              onClick={() => setViewMode('grid')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="7" height="7" x="3" y="3" rx="1" />
-                <rect width="7" height="7" x="14" y="3" rx="1" />
-                <rect width="7" height="7" x="3" y="14" rx="1" />
-                <rect width="7" height="7" x="14" y="14" rx="1" />
-              </svg>
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="icon"
-              className={viewMode === 'list' ? 'bg-fin-blue hover:bg-fin-dark-blue rounded-l-none' : 'rounded-l-none'}
-              onClick={() => setViewMode('list')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="8" y1="6" x2="21" y2="6" />
-                <line x1="8" y1="12" x2="21" y2="12" />
-                <line x1="8" y1="18" x2="21" y2="18" />
-                <line x1="3" y1="6" x2="3.01" y2="6" />
-                <line x1="3" y1="12" x2="3.01" y2="12" />
-                <line x1="3" y1="18" x2="3.01" y2="18" />
-              </svg>
-            </Button>
-          </div>
         </div>
       </div>
       
-      {renderFilterBadges()}
+      <div className="flex flex-wrap justify-between items-center mt-4">
+        <div className="flex space-x-2 mt-2">
+          <Button 
+            variant="default" 
+            onClick={handleApplyFilters}
+            className="flex items-center"
+          >
+            <Search className="mr-1 h-4 w-4" />
+            Apply Filters
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleResetFilters}
+            className="flex items-center"
+          >
+            <X className="mr-1 h-4 w-4" />
+            Reset
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
+
+export default ClaimsFilter;

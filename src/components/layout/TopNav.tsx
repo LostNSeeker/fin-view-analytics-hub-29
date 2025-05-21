@@ -1,17 +1,18 @@
 import React from 'react';
-import { Bell, Menu, Search } from 'lucide-react';
+import { Bell, Link, Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { isAuth } from '@/hooks/useAuth';
 import { 
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { NavLink } from 'react-router-dom';
 
 interface TopNavProps {
   toggleSidebar: () => void;
 }
-
 export const TopNav: React.FC<TopNavProps> = ({ toggleSidebar }) => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -54,9 +55,17 @@ export const TopNav: React.FC<TopNavProps> = ({ toggleSidebar }) => {
               </div>
             </PopoverContent>
           </Popover>
-          <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center text-white">
+          {
+            isAuth? 
+            <div className="h-8 w-8 rounded-full bg-fin-blue flex items-center justify-center text-white">
             RA
           </div>
+          :
+          <NavLink to={'/login'} className={({isActive}) => isActive? 'text-[#ffffff] bg-[#ea2b0f] text-lg font-bold px-4 py-2 rounded-full ' : 'text-[#ea2b0f] text-lg font-bold px-4 py-2 rounded-full bg-[#fff1ee] '}>
+                            LogIn
+          </NavLink>
+          }
+          
         </div>
       </div>
     </header>

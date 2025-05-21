@@ -18,8 +18,14 @@ import NotFound from "@/pages/NotFound";
 import ClaimsList from "./pages/ClaimsList";
 import ClaimDetail from "./pages/ClaimDetail";
 import ClaimForm from "./pages/ClaimForm";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import ChangePassword from "./pages/auth/ChangePassword";
 
 const queryClient = new QueryClient();
+export const Server = 'http://localhost:3000/api'; 
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -125,6 +131,12 @@ const App = () => (
               </MainLayout>
             } 
           />
+          //auth
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

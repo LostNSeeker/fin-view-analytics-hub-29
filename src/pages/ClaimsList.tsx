@@ -9,6 +9,7 @@ import ClaimCard from "@/components/claims/ClaimCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Server } from "@/App";
 
 // Interface matching your API response
 interface ApiClaim {
@@ -166,7 +167,7 @@ const ClaimsList = () => {
       setLoading(true);
       
       // Determine which endpoint to use based on whether filters are applied
-      let url = "http://localhost:3000/api/claims";
+      let url = `${Server}/claims`;
       let hasFilters = false;
       
       // Build query string from filters
@@ -181,7 +182,7 @@ const ClaimsList = () => {
           filters.status || filters.dateFrom || filters.dateTo) {
         
         // Switch to the filter endpoint
-        url = "http://localhost:3000/api/claims/search_claims";
+        url = `${Server}/claims/search_claims`;
         hasFilters = true;
         
         // Add filter parameters if they exist
@@ -258,7 +259,7 @@ const ClaimsList = () => {
 
   const handleDeleteClaim = async (claimId: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/claims/${claimId}`, {
+      const res = await fetch(`${Server}/claims/${claimId}`, {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Failed to delete claim');

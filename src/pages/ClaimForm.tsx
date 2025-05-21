@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Server } from "@/App";
 
 const ClaimFormPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,8 +53,8 @@ const ClaimFormPage = () => {
       setIsLoading(true);
       // API endpoint
       const endpoint = isEditing 
-        ? `http://localhost:3000/api/claims/${id}`
-        : 'http://localhost:3000/api/claims';
+        ? `${Server}/claims/${id}`
+        : `${Server}/claims`;
       
       // API method
       const method = isEditing ? 'PUT' : 'POST';

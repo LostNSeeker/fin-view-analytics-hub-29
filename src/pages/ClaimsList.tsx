@@ -10,6 +10,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Server } from "@/App";
+import {PolicyTypeModal} from '@/components/claims/ClaimDetail/PolicySelection';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
+
+
 
 // Interface matching your API response
 interface ApiClaim {
@@ -93,7 +97,7 @@ const ClaimsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentFilters, setCurrentFilters] = useState<FilterParams>({});
-  
+
   const itemsPerPage = 6; // This should match the 'limit' parameter sent to API
 
   // Function to transform API data to your frontend Claim type
@@ -114,7 +118,7 @@ const ClaimsList = () => {
     const normalizePriority = (priority: string): ClaimPriority => {
       const priorityMap: Record<string, ClaimPriority> = {
         'LOW': 'Low',
-        'MEDIUM': 'Medium', 
+        'MEDIUM': 'Medium',
         'HIGH': 'High'
       };
       return priorityMap[priority] || priority as ClaimPriority;
@@ -165,26 +169,26 @@ const ClaimsList = () => {
   const fetchClaims = async (filters: FilterParams = {}) => {
     try {
       setLoading(true);
-      
+
       // Determine which endpoint to use based on whether filters are applied
       let url = `${Server}/claims`;
       let hasFilters = false;
-      
+
       // Build query string from filters
       const queryParams = new URLSearchParams();
-      
+
       // Add pagination parameters
       queryParams.append('page', (filters.page || currentPage).toString());
       queryParams.append('limit', itemsPerPage.toString());
-      
+
       // Check if any filter parameters exist
-      if (filters.policyNumber || filters.customerName || filters.employeeName || 
-          filters.status || filters.dateFrom || filters.dateTo) {
-        
+      if (filters.policyNumber || filters.customerName || filters.employeeName ||
+        filters.status || filters.dateFrom || filters.dateTo) {
+
         // Switch to the filter endpoint
         url = `${Server}/claims/search_claims`;
         hasFilters = true;
-        
+
         // Add filter parameters if they exist
         if (filters.policyNumber) queryParams.append('policyNumber', filters.policyNumber);
         if (filters.customerName) queryParams.append('customerName', filters.customerName);
@@ -193,31 +197,31 @@ const ClaimsList = () => {
         if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
         if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
       }
-      
+
       // Append query parameters to URL
       const finalUrl = `${url}?${queryParams.toString()}`;
       console.log("Fetching from:", finalUrl);
-      
+
       const res = await fetch(finalUrl);
-      
+
       if (!res.ok) throw new Error("Failed to fetch claims");
-      
+
       const response: ApiResponse = await res.json();
       console.log("API Response:", response);
-      
+
       const apiClaims = response.data;
-      
+
       if (!Array.isArray(apiClaims)) {
         throw new Error("Invalid data format: expected an array");
       }
 
       // Transform API data to match your frontend Claim type
       const transformedClaims = apiClaims.map(transformApiDataToClaim);
-      
+
       setClaims(transformedClaims);
       setTotalItems(response.pagination.total);
       setTotalPages(response.pagination.pages);
-      
+
     } catch (err: any) {
       console.error("Error fetching claims:", err);
       setError(err.message || "Something went wrong");
@@ -246,7 +250,7 @@ const ClaimsList = () => {
       dateTo: filters.dateTo || undefined,
       page: 1 // Reset to first page when applying new filters
     };
-    
+
     setCurrentFilters(newFilters);
     setCurrentPage(1);
     fetchClaims(newFilters);
@@ -254,7 +258,7 @@ const ClaimsList = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchClaims({...currentFilters, page});
+    fetchClaims({ ...currentFilters, page });
   };
 
   const handleDeleteClaim = async (claimId: string) => {
@@ -278,6 +282,24 @@ const ClaimsList = () => {
         variant: "destructive",
       });
     }
+  };
+
+const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleNewClaim = () => {
+    setIsModalOpen(true);
+  };
+
+  const handlePolicySelect = (policyType: string, subType?: string, displayName?: string) => {
+    console.log('Selected:', { policyType, subType, displayName });
+    
+    // Close modal
+    setIsModalOpen(false);
+    
+    // Navigate to form with pre-filled policy type
+    // Example: navigate(`/claims/new?policyType=${policyType}&subType=${subType}&displayName=${displayName}`);
+    // or use state management to pass the selected policy type
+    
   };
 
   if (loading && claims.length === 0) {
@@ -327,11 +349,13 @@ const ClaimsList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold tracking-tight">Claims</h1>
-        <Button asChild>
-          <Link to="/claims/new">
+        <Button asChild onClick={handleNewClaim}>
+          {/* <Link to="/claims/new"> */}
+          <div>
             <Plus className="mr-2 h-4 w-4" />
             New Claim
-          </Link>
+          </div>
+          {/* </Link> */}
         </Button>
       </div>
 
@@ -376,7 +400,7 @@ const ClaimsList = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {claims.map((claim) => (
-                <ClaimCard key={claim.claimId} claim={claim}/>
+                <ClaimCard key={claim.claimId} claim={claim} />
               ))}
             </div>
           )}
@@ -414,6 +438,11 @@ const ClaimsList = () => {
           )}
         </>
       )}
+      <PolicyTypeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelect={handlePolicySelect}
+      />
     </div>
   );
 };

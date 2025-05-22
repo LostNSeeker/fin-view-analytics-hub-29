@@ -14,7 +14,7 @@ import CustomerList from "@/pages/CustomerList";
 import HelpCenter from "@/pages/HelpCenter";
 import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
-//
+//claim and auth
 import ClaimsList from "./pages/ClaimsList";
 import ClaimDetail from "./pages/ClaimDetail";
 import ClaimForm from "./pages/ClaimForm";

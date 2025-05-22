@@ -307,7 +307,7 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                     <FormItem>
                       <FormLabel>Policy Type</FormLabel>
                        <div className="border p-2 rounded-md">
-                        {selectedClaim}
+                        {selectedClaim || 'Marine'}
                        </div>
                       <FormMessage />
                     </FormItem>

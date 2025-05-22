@@ -20,26 +20,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, FileUp, Plus, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { log } from "node:console";
 
-const ClaimForm = ({ claim, onSubmit, onCancel }) => {
-  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
+const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim}) => {
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [policyTypes, setPolicyTypes] = useState([]);
@@ -105,12 +93,10 @@ const ClaimForm = ({ claim, onSubmit, onCancel }) => {
           policyTypesRes.json()
         ]);
          
-         //
-         console.log("1",policyTypesData.data );
-         console.log("2",policyTypesData.data[0] );
-         console.log("3",policyTypesData.data[0].data);
-         console.log("4",policyTypesData.data[0].data.name);
-         
+        console.log("1", policyTypesData.data);
+        console.log("2", policyTypesData.data[0]);
+        console.log("3", policyTypesData.data[0].data);
+        console.log("4", policyTypesData.data[0].data.name);
 
         // Fixed: Handling the nested customer structure from the controller
         setCustomers(customersData.customers || []);
@@ -128,6 +114,23 @@ const ClaimForm = ({ claim, onSubmit, onCancel }) => {
 
     fetchData();
   }, [toast]);
+
+  // Set pre-selected policy when policy types are loaded and pre-selected policy is available
+  useEffect(() => {
+    if (preSelectedPolicy && policyTypes.length > 0 && !claim) {
+      // Find the policy that matches the pre-selected policy's unique ID
+      const matchingPolicy = policyTypes.find(policy => {
+        // Check if the policy data has a uniqueId field that matches
+        return policy.data.uniqueId === preSelectedPolicy.uniqueId ||
+               policy.data.name === preSelectedPolicy.name ||
+               policy.id.toString() === preSelectedPolicy.uniqueId;
+      });
+
+      if (matchingPolicy) {
+        form.setValue("policy_id", matchingPolicy.id.toString());
+      }
+    }
+  }, [preSelectedPolicy, policyTypes, form, claim]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -186,8 +189,13 @@ const ClaimForm = ({ claim, onSubmit, onCancel }) => {
     }
   };
 
-  const handleDiscard = () => {
-    setIsDiscardDialogOpen(true);
+  const handleCancel = () => {
+    // Removed confirmation dialog - directly call onCancel
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate("/claims");
+    }
   };
 
   // Helper to handle form value changes that need to update nested objects
@@ -298,23 +306,9 @@ const ClaimForm = ({ claim, onSubmit, onCancel }) => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Policy Type</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select policy type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {policyTypes && policyTypes.map(policy => (
-                            <SelectItem key={policy.id} value={policy.id.toString()}>
-                              {policy.data.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                       <div className="border p-2 rounded-md">
+                        {selectedClaim || 'Marine'}
+                       </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -519,7 +513,7 @@ const ClaimForm = ({ claim, onSubmit, onCancel }) => {
           </div>
 
           <div className="mt-6 flex justify-end space-x-2">
-            <Button variant="outline" type="button" onClick={handleDiscard} disabled={isLoading}>
+            <Button variant="outline" type="button" onClick={handleCancel} disabled={isLoading}>
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
@@ -533,21 +527,6 @@ const ClaimForm = ({ claim, onSubmit, onCancel }) => {
           </div>
         </form>
       </Form>
-
-      <AlertDialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Any unsaved changes will be lost. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continue Editing</AlertDialogCancel>
-            <AlertDialogAction onClick={onCancel}>Discard Changes</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };

@@ -9,6 +9,11 @@ import ClaimCard from "@/components/claims/ClaimCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Server } from "@/App";
+import {PolicyTypeModal} from '@/components/claims/ClaimDetail/PolicySelection';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
+
+
 
 // Interface matching your API response
 interface ApiClaim {
@@ -71,44 +76,50 @@ interface ApiResponse {
   };
 }
 
+interface FilterParams {
+  policyNumber?: string;
+  customerName?: string;
+  employeeName?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
 const ClaimsList = () => {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
   const [claims, setClaims] = useState<Claim[]>([]);
-  const [filteredClaims, setFilteredClaims] = useState<Claim[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentFilters, setCurrentFilters] = useState<FilterParams>({});
 
-  const itemsPerPage = 6;
-  const totalPages = Math.ceil(filteredClaims.length / itemsPerPage);
-
-  const paginatedClaims = filteredClaims.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const itemsPerPage = 6; // This should match the 'limit' parameter sent to API
 
   // Function to transform API data to your frontend Claim type
   const transformApiDataToClaim = (apiClaim: ApiClaim): Claim => {
     // Safely handle status and priority values
     const normalizeStatus = (status: string): ClaimStatus => {
       const statusMap: Record<string, ClaimStatus> = {
-        'Completed': 'Completed',
-        'Approved': 'Approved',
-        'In Progress': 'In Progress',
-        'pending': 'pending',
-        'approved': 'approved',
-        'rejected': 'rejected',
-        'inReview': 'inReview'
+        'COMPLETED': 'Completed',
+        'APPROVED': 'Approved',
+        'IN PROGRESS': 'In Progress',
+        'PENDING': 'pending',
+        'REJECTED': 'rejected',
+        'IN REVIEW': 'inReview'
       };
       return statusMap[status] || status as ClaimStatus;
     };
 
     const normalizePriority = (priority: string): ClaimPriority => {
       const priorityMap: Record<string, ClaimPriority> = {
-        'Low': 'Low',
-        'Medium': 'Medium', 
-        'High': 'High'
+        'LOW': 'Low',
+        'MEDIUM': 'Medium',
+        'HIGH': 'High'
       };
       return priorityMap[priority] || priority as ClaimPriority;
     };
@@ -155,92 +166,104 @@ const ClaimsList = () => {
     };
   };
 
-  useEffect(() => {
-    const fetchClaims = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("http://localhost:3000/api/claims");
-        if (!res.ok) throw new Error("Failed to fetch claims");
-        const response: ApiResponse = await res.json();
+  const fetchClaims = async (filters: FilterParams = {}) => {
+    try {
+      setLoading(true);
 
-        const apiClaims = response.data; 
-        console.log("API Response:", response);
-        console.log("Claims data:", apiClaims);
+      // Determine which endpoint to use based on whether filters are applied
+      let url = `${Server}/claims`;
+      let hasFilters = false;
 
-        if (!Array.isArray(apiClaims)) {
-          throw new Error("Invalid data format: expected an array");
-        }
+      // Build query string from filters
+      const queryParams = new URLSearchParams();
 
-        // Transform API data to match your frontend Claim type
-        const transformedClaims = apiClaims.map(transformApiDataToClaim);
-        
-        setClaims(transformedClaims);
-        setFilteredClaims(transformedClaims);
-      } catch (err: any) {
-        console.error("Error fetching claims:", err);
-        setError(err.message || "Something went wrong");
-        toast({
-          title: "Error",
-          description: "Failed to load claims. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      // Add pagination parameters
+      queryParams.append('page', (filters.page || currentPage).toString());
+      queryParams.append('limit', itemsPerPage.toString());
+
+      // Check if any filter parameters exist
+      if (filters.policyNumber || filters.customerName || filters.employeeName ||
+        filters.status || filters.dateFrom || filters.dateTo) {
+
+        // Switch to the filter endpoint
+        url = `${Server}/claims/search_claims`;
+        hasFilters = true;
+
+        // Add filter parameters if they exist
+        if (filters.policyNumber) queryParams.append('policyNumber', filters.policyNumber);
+        if (filters.customerName) queryParams.append('customerName', filters.customerName);
+        if (filters.employeeName) queryParams.append('employeeName', filters.employeeName);
+        if (filters.status) queryParams.append('status', filters.status);
+        if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
+        if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
       }
-    };
 
+      // Append query parameters to URL
+      const finalUrl = `${url}?${queryParams.toString()}`;
+      console.log("Fetching from:", finalUrl);
+
+      const res = await fetch(finalUrl);
+
+      if (!res.ok) throw new Error("Failed to fetch claims");
+
+      const response: ApiResponse = await res.json();
+      console.log("API Response:", response);
+
+      const apiClaims = response.data;
+
+      if (!Array.isArray(apiClaims)) {
+        throw new Error("Invalid data format: expected an array");
+      }
+
+      // Transform API data to match your frontend Claim type
+      const transformedClaims = apiClaims.map(transformApiDataToClaim);
+
+      setClaims(transformedClaims);
+      setTotalItems(response.pagination.total);
+      setTotalPages(response.pagination.pages);
+
+    } catch (err: any) {
+      console.error("Error fetching claims:", err);
+      setError(err.message || "Something went wrong");
+      toast({
+        title: "Error",
+        description: "Failed to load claims. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchClaims();
-  }, [toast]);
+  }, [currentPage]); // Fetch claims when page changes
 
   const handleFilterChange = (filters: any) => {
-    let results = [...claims];
+    // Update current filters state
+    const newFilters: FilterParams = {
+      policyNumber: filters.policyNumber || undefined,
+      customerName: filters.customerName || undefined,
+      employeeName: filters.employee || undefined, // Map employee to employeeName for API
+      status: filters.status ? filters.status.toUpperCase() : undefined, // Convert status to uppercase for API
+      dateFrom: filters.dateFrom || undefined,
+      dateTo: filters.dateTo || undefined,
+      page: 1 // Reset to first page when applying new filters
+    };
 
-    if (filters.policyNumber) {
-      results = results.filter(claim =>
-        claim.policyId.toLowerCase().includes(filters.policyNumber.toLowerCase())
-      );
-    }
-
-    if (filters.customerName) {
-      results = results.filter(claim =>
-        claim.clientName.toLowerCase().includes(filters.customerName.toLowerCase())
-      );
-    }
-
-    if (filters.employee) {
-      results = results.filter(claim =>
-        claim.assignedEmployee.toLowerCase().includes(filters.employee.toLowerCase())
-      );
-    }
-
-    if (filters.status) {
-      results = results.filter(claim => claim.status === filters.status);
-    }
-
-    if (filters.priority) {
-      results = results.filter(claim => claim.priority === filters.priority);
-    }
-
-    // Add date range filtering if needed
-    if (filters.dateFrom) {
-      results = results.filter(claim => 
-        new Date(claim.incidentDate) >= new Date(filters.dateFrom)
-      );
-    }
-
-    if (filters.dateTo) {
-      results = results.filter(claim => 
-        new Date(claim.incidentDate) <= new Date(filters.dateTo)
-      );
-    }
-
-    setFilteredClaims(results);
+    setCurrentFilters(newFilters);
     setCurrentPage(1);
+    fetchClaims(newFilters);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchClaims({ ...currentFilters, page });
   };
 
   const handleDeleteClaim = async (claimId: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/claims/${claimId}`, {
+      const res = await fetch(`${Server}/claims/${claimId}`, {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Failed to delete claim');
@@ -250,8 +273,8 @@ const ClaimsList = () => {
         description: `Claim ${claimId} has been deleted successfully.`,
       });
 
-      setFilteredClaims(prev => prev.filter(claim => claim.claimId !== claimId));
-      setClaims(prev => prev.filter(claim => claim.claimId !== claimId));
+      // Refresh the claims list after deletion
+      fetchClaims(currentFilters);
     } catch (error) {
       toast({
         title: "Error",
@@ -261,7 +284,25 @@ const ClaimsList = () => {
     }
   };
 
-  if (loading) {
+const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleNewClaim = () => {
+    setIsModalOpen(true);
+  };
+
+  const handlePolicySelect = (policyType: string, subType?: string, displayName?: string) => {
+    console.log('Selected:', { policyType, subType, displayName });
+    
+    // Close modal
+    setIsModalOpen(false);
+    
+    // Navigate to form with pre-filled policy type
+    // Example: navigate(`/claims/new?policyType=${policyType}&subType=${subType}&displayName=${displayName}`);
+    // or use state management to pass the selected policy type
+    
+  };
+
+  if (loading && claims.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -280,7 +321,7 @@ const ClaimsList = () => {
     );
   }
 
-  if (error) {
+  if (error && claims.length === 0) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -295,7 +336,7 @@ const ClaimsList = () => {
         <div className="flex items-center justify-center h-48">
           <div className="text-center">
             <p className="text-red-500 mb-2">{error}</p>
-            <Button onClick={() => window.location.reload()}>
+            <Button onClick={() => fetchClaims()}>
               Try Again
             </Button>
           </div>
@@ -308,11 +349,13 @@ const ClaimsList = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold tracking-tight">Claims</h1>
-        <Button asChild>
-          <Link to="/claims/new">
+        <Button asChild onClick={handleNewClaim}>
+          {/* <Link to="/claims/new"> */}
+          <div>
             <Plus className="mr-2 h-4 w-4" />
             New Claim
-          </Link>
+          </div>
+          {/* </Link> */}
         </Button>
       </div>
 
@@ -320,8 +363,8 @@ const ClaimsList = () => {
 
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">{paginatedClaims.length}</span> of{" "}
-          <span className="font-medium">{filteredClaims.length}</span> claims
+          Showing <span className="font-medium">{claims.length}</span> of{" "}
+          <span className="font-medium">{totalItems}</span> claims
         </p>
 
         <Tabs defaultValue="table" onValueChange={(value) => setViewMode(value as "grid" | "table")}>
@@ -338,7 +381,13 @@ const ClaimsList = () => {
         </Tabs>
       </div>
 
-      {filteredClaims.length === 0 ? (
+      {loading && (
+        <div className="flex justify-center py-4">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      )}
+
+      {!loading && claims.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No claims found matching your filters.</p>
         </div>
@@ -346,12 +395,12 @@ const ClaimsList = () => {
         <>
           {viewMode === "table" ? (
             <div className="border rounded-lg bg-white overflow-hidden">
-              <ClaimsTable claims={paginatedClaims} onDeleteClaim={handleDeleteClaim} />
+              <ClaimsTable claims={claims} onDeleteClaim={handleDeleteClaim} />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedClaims.map((claim) => (
-                <ClaimCard key={claim.claimId} claim={claim}/>
+              {claims.map((claim) => (
+                <ClaimCard key={claim.claimId} claim={claim} />
               ))}
             </div>
           )}
@@ -361,7 +410,7 @@ const ClaimsList = () => {
               <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
@@ -369,7 +418,7 @@ const ClaimsList = () => {
                 {Array.from({ length: totalPages }).map((_, index) => (
                   <PaginationItem key={index}>
                     <PaginationLink
-                      onClick={() => setCurrentPage(index + 1)}
+                      onClick={() => handlePageChange(index + 1)}
                       isActive={currentPage === index + 1}
                       className="cursor-pointer"
                     >
@@ -380,7 +429,7 @@ const ClaimsList = () => {
 
                 <PaginationItem>
                   <PaginationNext
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                     className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
@@ -389,6 +438,11 @@ const ClaimsList = () => {
           )}
         </>
       )}
+      <PolicyTypeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelect={handlePolicySelect}
+      />
     </div>
   );
 };

@@ -1,18 +1,44 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import ClaimFormComponent from "@/components/claims/ClaimForm";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Server } from "@/App";
+import { useLocation } from "react-router-dom";
 
 const ClaimFormPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [claim, setClaim] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [preSelectedPolicy, setPreSelectedPolicy] = useState(null);
+  //claim type 
+  const location = useLocation();
+  const [selectedOption, setSelectedOption] = useState("");
+  useEffect(() => {
+    if (location.state?.selectedOption) {
+      setSelectedOption(location.state.selectedOption);
+    }
+  }, [location]);
+
   
   const isEditing = id !== undefined;
+  
+  // Get pre-selected policy from URL parameters
+  useEffect(() => {
+    const policyType = searchParams.get('policyType');
+    const policyName = searchParams.get('policyName');
+    
+    if (policyType && policyName && !isEditing) {
+      setPreSelectedPolicy({
+        uniqueId: policyType,
+        name: decodeURIComponent(policyName)
+      });
+    }
+  }, [searchParams, isEditing]);
   
   // Fetch claim data if editing
   useEffect(() => {
@@ -52,8 +78,8 @@ const ClaimFormPage = () => {
       setIsLoading(true);
       // API endpoint
       const endpoint = isEditing 
-        ? `http://localhost:3000/api/claims/${id}`
-        : 'http://localhost:3000/api/claims';
+        ? `${Server}/claims/${id}`
+        : `${Server}/claims`;
       
       // API method
       const method = isEditing ? 'PUT' : 'POST';
@@ -124,6 +150,8 @@ const ClaimFormPage = () => {
        
         <ClaimFormComponent
           claim={claim}
+          preSelectedPolicy={preSelectedPolicy}
+          selectedClaim={selectedOption}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
         />

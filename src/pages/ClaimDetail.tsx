@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-
+import {useUser} from "@/context/UserContext";
 // Create these components based on the API response structure
 const ClaimInfo = ({ claim }) => {
   return (
@@ -241,6 +241,7 @@ const ClaimDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { BackendUrl } = useUser();
   
   const [loading, setLoading] = useState(true);
   const [claim, setClaim] = useState(null);
@@ -253,7 +254,7 @@ const ClaimDetail = () => {
     const fetchClaim = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/api/claims/${id}`);
+        const response = await fetch(BackendUrl+`/claims/${id}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch claim: ${response.status}`);

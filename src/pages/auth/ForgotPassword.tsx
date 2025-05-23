@@ -4,7 +4,7 @@ import FormField from "../../components/auth/FormField";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { Server } from "@/App";
+import { useUser } from "@/context/UserContext";
 
 const ForgotPassword = () => {
   const { toast } = useToast();
@@ -12,7 +12,7 @@ const ForgotPassword = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [email, setEmail] = useState("");
-
+const { BackendUrl } = useUser();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -28,7 +28,7 @@ const ForgotPassword = () => {
     if (Object.keys(newErrors).length === 0) {
       try {
         // API call to forgot password endpoint
-        await axios.post(`${Server}/auth/forgot-password`, { email });
+        await axios.post(`${BackendUrl}/auth/forgot-password`, { email });
         
         setEmailSent(true);
         toast({

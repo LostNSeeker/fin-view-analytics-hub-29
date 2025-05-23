@@ -9,9 +9,9 @@ import ClaimCard from "@/components/claims/ClaimCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Server } from "@/App";
 import {PolicyTypeModal} from '@/components/claims/ClaimDetail/PolicySelection';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
+import { useUser } from "@/context/UserContext";
 
 
 
@@ -97,6 +97,7 @@ const ClaimsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentFilters, setCurrentFilters] = useState<FilterParams>({});
+  const { BackendUrl } = useUser();
 
   const itemsPerPage = 6; // This should match the 'limit' parameter sent to API
 
@@ -171,7 +172,7 @@ const ClaimsList = () => {
       setLoading(true);
 
       // Determine which endpoint to use based on whether filters are applied
-      let url = `${Server}/claims`;
+      let url = `${BackendUrl}/claims`;
       let hasFilters = false;
 
       // Build query string from filters
@@ -186,7 +187,7 @@ const ClaimsList = () => {
         filters.status || filters.dateFrom || filters.dateTo) {
 
         // Switch to the filter endpoint
-        url = `${Server}/claims/search_claims`;
+        url = `${BackendUrl}/claims/search_claims`;
         hasFilters = true;
 
         // Add filter parameters if they exist
@@ -268,7 +269,7 @@ const ClaimsList = () => {
 
   const handleDeleteClaim = async (claimId: string) => {
     try {
-      const res = await fetch(`${Server}/claims/${claimId}`, {
+      const res = await fetch(`${BackendUrl}/claims/${claimId}`, {
         method: 'DELETE'
       });
       if (!res.ok) throw new Error('Failed to delete claim');

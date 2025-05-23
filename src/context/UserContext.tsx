@@ -1,7 +1,6 @@
 // context/UserContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { Server } from "@/App";
 
 interface User {
   id: number;
@@ -14,12 +13,14 @@ interface User {
 interface UserContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  BackendUrl: string;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const BackendUrl = import.meta.env.VITE_BKND_URL || "http://localhost:3000/api";
 
   const fetchUser = async () => {
     try {
@@ -28,7 +29,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (!token) return;
 
-      const res = await axios.get(`${Server}/auth/me`, {
+      const res = await axios.get(`${BackendUrl}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -44,7 +45,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUser();
   }, []);
 
-  return <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>;
+  return <UserContext.Provider value={{ user, setUser,BackendUrl }}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {

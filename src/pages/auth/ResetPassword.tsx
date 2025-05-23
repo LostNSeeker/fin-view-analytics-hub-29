@@ -4,12 +4,13 @@ import FormField from "../../components/auth/FormField";
 import { useToast } from "@/components/ui/use-toast";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Server } from "@/App";
+import { useUser } from "@/context/UserContext";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
   const navigate = useNavigate();
+  const { BackendUrl } = useUser();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
@@ -48,7 +49,7 @@ const ResetPassword = () => {
     if (Object.keys(newErrors).length === 0) {
       try {
         // API call to reset password endpoint
-        await axios.post(`${Server}/auth/reset-password`, {
+        await axios.post(`${BackendUrl}/auth/reset-password`, {
           token,
           newPassword: formData.password
         });

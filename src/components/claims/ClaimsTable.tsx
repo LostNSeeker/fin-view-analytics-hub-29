@@ -19,7 +19,7 @@ import StatusBadge from "./StatusBadge";
 import { ArrowUpDown, MoreHorizontal, Eye, Pencil, Trash, AlertTriangle } from "lucide-react";
 import { formatDate } from "@/lib/date-utils";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
-import { Server } from "@/lib/api";
+import { useUser } from "@/context/UserContext";
 
 interface ClaimsTableProps {
   claims: Claim[];
@@ -60,6 +60,7 @@ const PriorityBadge = ({ priority }: { priority: ClaimPriority }) => {
 const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
   const [sortField, setSortField] = useState<keyof Claim>("updatedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const {BackendUrl} = useUser();
 
   const handleSort = (field: keyof Claim) => {
     if (sortField === field) {

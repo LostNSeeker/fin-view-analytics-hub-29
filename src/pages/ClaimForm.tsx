@@ -4,12 +4,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Server } from "@/App";
 import { useLocation } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
 
 const ClaimFormPage = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
+  const { BackendUrl } = useUser();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [claim, setClaim] = useState(null);
@@ -48,7 +49,7 @@ const ClaimFormPage = () => {
           // Replace with your actual API endpoint
           const token = localStorage.getItem("token");
           const response = await fetch(
-            `http://localhost:3000/api/claims/${id}`,
+            BackendUrl+`/claims/${id}`,
             {
               headers: {
                 Authorization: token ? `Bearer ${token}` : "",
@@ -85,8 +86,8 @@ const ClaimFormPage = () => {
       setIsLoading(true);
       // API endpoint
       const endpoint = isEditing
-        ? `${Server}/claims/${id}`
-        : `${Server}/claims`;
+        ? `${BackendUrl}/claims/${id}`
+        : `${BackendUrl}/claims`;
 
       // API method
       const method = isEditing ? "PUT" : "POST";

@@ -23,9 +23,7 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import ChangePassword from "./pages/auth/ChangePassword";
-
 const queryClient = new QueryClient();
-export const Server = 'http://localhost:3000/api'; 
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

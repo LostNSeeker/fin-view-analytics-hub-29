@@ -4,7 +4,7 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import FormField from "../../components/auth/FormField";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
-import { Server } from "@/App";
+import { useUser } from "@/context/UserContext";
 
 // Define type for form errors
 interface FormErrors {
@@ -21,6 +21,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const { BackendUrl } = useUser();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -68,7 +69,7 @@ const Register = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${Server}/auth/register`, {
+      const response = await fetch(`${BackendUrl}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

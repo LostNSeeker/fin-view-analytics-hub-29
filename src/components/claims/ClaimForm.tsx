@@ -36,6 +36,7 @@ import { CalendarIcon, FileUp, Plus, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/context/UserContext";
 
 const ClaimForm = ({
   claim,
@@ -50,6 +51,7 @@ const ClaimForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const {BackendUrl} = useUser();
 
   // Form default values based on the API structure
   const defaultValues = claim
@@ -102,9 +104,9 @@ const ClaimForm = ({
           },
         };
         const [customersRes, employeesRes, policyTypesRes] = await Promise.all([
-          fetch("http://localhost:3000/api/customers", authHeader),
-          fetch("http://localhost:3000/api/employees", authHeader),
-          fetch("http://localhost:3000/api/policy-types", authHeader),
+          fetch(BackendUrl+"/customers", authHeader),
+          fetch(BackendUrl+"/employees", authHeader),
+          fetch(BackendUrl+"/policy-types", authHeader),
         ]);
 
         if (!customersRes.ok || !employeesRes.ok || !policyTypesRes.ok) {
@@ -182,7 +184,7 @@ const ClaimForm = ({
       }
 
       // Otherwise use the internal API call
-      const response = await fetch("http://localhost:3000/api/claims", {
+      const response = await fetch(BackendUrl+"/claims", {
         method: claim ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",

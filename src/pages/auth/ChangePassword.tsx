@@ -4,7 +4,7 @@ import FormField from "../../components/auth/FormField";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import { Server } from "@/App";
+import { useUser } from "@/context/UserContext";
 
 const ChangePassword = () => {
   const { toast } = useToast();
@@ -15,6 +15,7 @@ const ChangePassword = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const { BackendUrl } = useUser();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,7 +53,7 @@ const ChangePassword = () => {
     if (Object.keys(newErrors).length === 0) {
       try {
         // API call to change password endpoint
-        await axios.post(`${Server}/auth//change-password`, {
+        await axios.post(`${BackendUrl}/auth//change-password`, {
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword
         }, {

@@ -1,75 +1,93 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { CalendarIcon, FileUp, Plus, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
-const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim}) => {
+const ClaimForm = ({
+  claim,
+  preSelectedPolicy,
+  onSubmit,
+  onCancel,
+  selectedClaim,
+}) => {
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [policyTypes, setPolicyTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   // Form default values based on the API structure
-  const defaultValues = claim ? {
-    details: claim.details,
-    customer_id: claim.customer_id ? claim.customer_id.toString() : "",
-    employee_id: claim.employee_id ? claim.employee_id.toString() : "",
-    policy_id: claim.policy_id ? claim.policy_id.toString() : "",
-    docs: claim.docs || {
-      photoEvidence: false,
-      estimateProvided: false
-    },
-    metadata: claim.metadata || {
-      status: "Pending",
-      priority: "Medium",
-      claimAmount: 0,
-      incidentDate: new Date().toISOString().split('T')[0]
-    }
-  } : {
-    details: "",
-    customer_id: "",
-    employee_id: "",
-    policy_id: "",
-    docs: {
-      photoEvidence: false,
-      estimateProvided: false
-    },
-    metadata: {
-      status: "Pending",
-      priority: "Medium",
-      claimAmount: 0,
-      incidentDate: new Date().toISOString().split('T')[0]
-    }
-  };
-  
+  const defaultValues = claim
+    ? {
+        details: claim.details,
+        customer_id: claim.customer_id ? claim.customer_id.toString() : "",
+        employee_id: claim.employee_id ? claim.employee_id.toString() : "",
+        policy_id: claim.policy_id ? claim.policy_id.toString() : "",
+        docs: claim.docs || {
+          photoEvidence: false,
+          estimateProvided: false,
+        },
+        metadata: claim.metadata || {
+          status: "Pending",
+          priority: "Medium",
+          claimAmount: 0,
+          incidentDate: new Date().toISOString().split("T")[0],
+        },
+      }
+    : {
+        details: "",
+        customer_id: "",
+        employee_id: "",
+        policy_id: "",
+        docs: {
+          photoEvidence: false,
+          estimateProvided: false,
+        },
+        metadata: {
+          status: "Pending",
+          priority: "Medium",
+          claimAmount: 0,
+          incidentDate: new Date().toISOString().split("T")[0],
+        },
+      };
+
   const form = useForm({
-    defaultValues
+    defaultValues,
   });
 
   // Fetch customers, employees, and policy types on component mount
@@ -77,22 +95,29 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
     const fetchData = async () => {
       try {
         // These endpoints should be updated to match your actual API endpoints
+        const token = localStorage.getItem("token");
+        const authHeader = {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        };
         const [customersRes, employeesRes, policyTypesRes] = await Promise.all([
-          fetch('http://localhost:3000/api/customers'),
-          fetch('http://localhost:3000/api/employees'),
-          fetch('http://localhost:3000/api/policy-types')
+          fetch("http://localhost:3000/api/customers", authHeader),
+          fetch("http://localhost:3000/api/employees", authHeader),
+          fetch("http://localhost:3000/api/policy-types", authHeader),
         ]);
-        
+
         if (!customersRes.ok || !employeesRes.ok || !policyTypesRes.ok) {
           throw new Error("Failed to fetch data");
         }
 
-        const [customersData, employeesData, policyTypesData] = await Promise.all([
-          customersRes.json(),
-          employeesRes.json(),
-          policyTypesRes.json()
-        ]);
-         
+        const [customersData, employeesData, policyTypesData] =
+          await Promise.all([
+            customersRes.json(),
+            employeesRes.json(),
+            policyTypesRes.json(),
+          ]);
+
         console.log("1", policyTypesData.data);
         console.log("2", policyTypesData.data[0]);
         console.log("3", policyTypesData.data[0].data);
@@ -107,7 +132,7 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
         toast({
           title: "Error",
           description: "Failed to load data. Please try again later.",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
     };
@@ -119,11 +144,13 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
   useEffect(() => {
     if (preSelectedPolicy && policyTypes.length > 0 && !claim) {
       // Find the policy that matches the pre-selected policy's unique ID
-      const matchingPolicy = policyTypes.find(policy => {
+      const matchingPolicy = policyTypes.find((policy) => {
         // Check if the policy data has a uniqueId field that matches
-        return policy.data.uniqueId === preSelectedPolicy.uniqueId ||
-               policy.data.name === preSelectedPolicy.name ||
-               policy.id.toString() === preSelectedPolicy.uniqueId;
+        return (
+          policy.data.uniqueId === preSelectedPolicy.uniqueId ||
+          policy.data.name === preSelectedPolicy.name ||
+          policy.id.toString() === preSelectedPolicy.uniqueId
+        );
       });
 
       if (matchingPolicy) {
@@ -135,7 +162,7 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
   const handleSubmit = async (formData) => {
     try {
       setIsLoading(true);
-      
+
       // Make sure all ID fields are properly formatted
       const preparedData = {
         ...formData,
@@ -144,8 +171,8 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
         policy_id: parseInt(formData.policy_id),
         metadata: {
           ...formData.metadata,
-          claimAmount: parseFloat(formData.metadata.claimAmount) || 0
-        }
+          claimAmount: parseFloat(formData.metadata.claimAmount) || 0,
+        },
       };
 
       // If we're using the parent component's onSubmit handler
@@ -155,12 +182,14 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
       }
 
       // Otherwise use the internal API call
-      const response = await fetch('http://localhost:3000/api/claims', {
-        method: claim ? 'PUT' : 'POST',
+      const response = await fetch("http://localhost:3000/api/claims", {
+        method: claim ? "PUT" : "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(claim ? { ...preparedData, id: claim.id } : preparedData),
+        body: JSON.stringify(
+          claim ? { ...preparedData, id: claim.id } : preparedData
+        ),
       });
 
       if (!response.ok) {
@@ -169,12 +198,14 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
       }
 
       const savedClaim = await response.json();
-      
+
       toast({
         title: claim ? "Claim updated" : "Claim created",
-        description: `Claim has been ${claim ? "updated" : "created"} successfully.`,
+        description: `Claim has been ${
+          claim ? "updated" : "created"
+        } successfully.`,
       });
-      
+
       // Navigate to the claim detail page
       navigate(`/claims/${savedClaim.id}`);
     } catch (error) {
@@ -182,7 +213,7 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -203,7 +234,7 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
     const currentValues = form.getValues(field) || {};
     form.setValue(field, {
       ...currentValues,
-      [nestedField]: value
+      [nestedField]: value,
     });
   };
 
@@ -225,10 +256,10 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                       <FormItem>
                         <FormLabel>Claim Details</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Enter claim details" 
-                            className="min-h-32" 
-                            {...field} 
+                          <Textarea
+                            placeholder="Enter claim details"
+                            className="min-h-32"
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -250,8 +281,8 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Customer</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -260,11 +291,15 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {customers && customers.map(customer => (
-                            <SelectItem key={customer.id} value={customer.id.toString()}>
-                              {customer.name}
-                            </SelectItem>
-                          ))}
+                          {customers &&
+                            customers.map((customer) => (
+                              <SelectItem
+                                key={customer.id}
+                                value={customer.id.toString()}
+                              >
+                                {customer.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -278,8 +313,8 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned Agent</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -288,11 +323,15 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {employees && employees.map(employee => (
-                            <SelectItem key={employee.id} value={employee.id.toString()}>
-                              {employee.name} - {employee.position}
-                            </SelectItem>
-                          ))}
+                          {employees &&
+                            employees.map((employee) => (
+                              <SelectItem
+                                key={employee.id}
+                                value={employee.id.toString()}
+                              >
+                                {employee.name} - {employee.position}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -306,9 +345,9 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Policy Type</FormLabel>
-                       <div className="border p-2 rounded-md">
-                        {selectedClaim || 'Marine'}
-                       </div>
+                      <div className="border p-2 rounded-md">
+                        {selectedClaim || "Marine"}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -327,8 +366,10 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select 
-                        onValueChange={(value) => handleNestedChange("metadata", "status", value)} 
+                      <Select
+                        onValueChange={(value) =>
+                          handleNestedChange("metadata", "status", value)
+                        }
                         defaultValue={form.getValues("metadata.status")}
                       >
                         <FormControl>
@@ -338,8 +379,12 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="In Progress">In Progress</SelectItem>
-                          <SelectItem value="Under Review">Under Review</SelectItem>
+                          <SelectItem value="In Progress">
+                            In Progress
+                          </SelectItem>
+                          <SelectItem value="Under Review">
+                            Under Review
+                          </SelectItem>
                           <SelectItem value="Approved">Approved</SelectItem>
                           <SelectItem value="Completed">Completed</SelectItem>
                           <SelectItem value="Rejected">Rejected</SelectItem>
@@ -356,8 +401,10 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Priority</FormLabel>
-                      <Select 
-                        onValueChange={(value) => handleNestedChange("metadata", "priority", value)}
+                      <Select
+                        onValueChange={(value) =>
+                          handleNestedChange("metadata", "priority", value)
+                        }
                         defaultValue={form.getValues("metadata.priority")}
                       >
                         <FormControl>
@@ -383,11 +430,17 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                     <FormItem>
                       <FormLabel>Claim Amount</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Enter claim amount" 
+                        <Input
+                          type="number"
+                          placeholder="Enter claim amount"
                           value={field.value}
-                          onChange={(e) => handleNestedChange("metadata", "claimAmount", e.target.value)}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "metadata",
+                              "claimAmount",
+                              e.target.value
+                            )
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -423,10 +476,18 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value ? new Date(field.value) : undefined}
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
                             onSelect={(date) => {
-                              const dateStr = date ? date.toISOString().split('T')[0] : '';
-                              handleNestedChange("metadata", "incidentDate", dateStr);
+                              const dateStr = date
+                                ? date.toISOString().split("T")[0]
+                                : "";
+                              handleNestedChange(
+                                "metadata",
+                                "incidentDate",
+                                dateStr
+                              );
                             }}
                             disabled={(date) =>
                               date > new Date() || date < new Date("1900-01-01")
@@ -463,14 +524,20 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                           <input
                             type="checkbox"
                             checked={field.value}
-                            onChange={(e) => handleNestedChange("docs", "photoEvidence", e.target.checked)}
+                            onChange={(e) =>
+                              handleNestedChange(
+                                "docs",
+                                "photoEvidence",
+                                e.target.checked
+                              )
+                            }
                             className="accent-primary h-4 w-4 rounded border-gray-300"
                           />
                         </FormControl>
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="docs.estimateProvided"
@@ -486,7 +553,13 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                           <input
                             type="checkbox"
                             checked={field.value}
-                            onChange={(e) => handleNestedChange("docs", "estimateProvided", e.target.checked)}
+                            onChange={(e) =>
+                              handleNestedChange(
+                                "docs",
+                                "estimateProvided",
+                                e.target.checked
+                              )
+                            }
                             className="accent-primary h-4 w-4 rounded border-gray-300"
                           />
                         </FormControl>
@@ -494,7 +567,7 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
                     )}
                   />
                 </div>
-                
+
                 <div className="border border-dashed p-8 rounded-md flex flex-col items-center justify-center text-center mt-4">
                   <FileUp className="h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-muted-foreground">
@@ -513,15 +586,25 @@ const ClaimForm = ({ claim, preSelectedPolicy, onSubmit, onCancel ,selectedClaim
           </div>
 
           <div className="mt-6 flex justify-end space-x-2">
-            <Button variant="outline" type="button" onClick={handleCancel} disabled={isLoading}>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
-                <><span className="animate-spin mr-2">⏳</span> Saving...</>
+                <>
+                  <span className="animate-spin mr-2">⏳</span> Saving...
+                </>
               ) : (
-                <><Save className="mr-2 h-4 w-4" />{claim ? "Update Claim" : "Create Claim"}</>
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  {claim ? "Update Claim" : "Create Claim"}
+                </>
               )}
             </Button>
           </div>

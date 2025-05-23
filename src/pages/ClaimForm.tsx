@@ -15,7 +15,7 @@ const ClaimFormPage = () => {
   const [claim, setClaim] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [preSelectedPolicy, setPreSelectedPolicy] = useState(null);
-  //claim type 
+  //claim type
   const location = useLocation();
   const [selectedOption, setSelectedOption] = useState("");
   useEffect(() => {
@@ -24,22 +24,21 @@ const ClaimFormPage = () => {
     }
   }, [location]);
 
-  
   const isEditing = id !== undefined;
-  
+
   // Get pre-selected policy from URL parameters
   useEffect(() => {
-    const policyType = searchParams.get('policyType');
-    const policyName = searchParams.get('policyName');
-    
+    const policyType = searchParams.get("policyType");
+    const policyName = searchParams.get("policyName");
+
     if (policyType && policyName && !isEditing) {
       setPreSelectedPolicy({
         uniqueId: policyType,
-        name: decodeURIComponent(policyName)
+        name: decodeURIComponent(policyName),
       });
     }
   }, [searchParams, isEditing]);
-  
+
   // Fetch claim data if editing
   useEffect(() => {
     if (isEditing) {
@@ -47,12 +46,20 @@ const ClaimFormPage = () => {
         setIsLoading(true);
         try {
           // Replace with your actual API endpoint
-          const response = await fetch(`http://localhost:3000/api/claims/${id}`);
-          
+          const token = localStorage.getItem("token");
+          const response = await fetch(
+            `http://localhost:3000/api/claims/${id}`,
+            {
+              headers: {
+                Authorization: token ? `Bearer ${token}` : "",
+              },
+            }
+          );
+
           if (!response.ok) {
             throw new Error("Failed to fetch claim");
           }
-          
+
           const claimData = await response.json();
           setClaim(claimData);
         } catch (error) {
@@ -60,7 +67,7 @@ const ClaimFormPage = () => {
           toast({
             title: "Error",
             description: "Failed to load claim data. Please try again later.",
-            variant: "destructive"
+            variant: "destructive",
           });
           // Navigate back to claims list on error
           navigate("/claims");
@@ -68,7 +75,7 @@ const ClaimFormPage = () => {
           setIsLoading(false);
         }
       };
-      
+
       fetchClaim();
     }
   }, [id, isEditing, navigate, toast]);
@@ -77,33 +84,35 @@ const ClaimFormPage = () => {
     try {
       setIsLoading(true);
       // API endpoint
-      const endpoint = isEditing 
+      const endpoint = isEditing
         ? `${Server}/claims/${id}`
         : `${Server}/claims`;
-      
+
       // API method
-      const method = isEditing ? 'PUT' : 'POST';
-      
+      const method = isEditing ? "PUT" : "POST";
+
       const response = await fetch(endpoint, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(isEditing ? { ...data, id } : data),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to save claim");
       }
-      
+
       const savedClaim = await response.json();
-      
+
       toast({
         title: isEditing ? "Claim updated" : "Claim created",
-        description: `Claim has been ${isEditing ? "updated" : "created"} successfully.`,
+        description: `Claim has been ${
+          isEditing ? "updated" : "created"
+        } successfully.`,
       });
-      
+
       // Navigate to appropriate page after success
       navigate(isEditing ? `/claims/${id}` : "/claims");
     } catch (error) {
@@ -111,7 +120,7 @@ const ClaimFormPage = () => {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -125,7 +134,7 @@ const ClaimFormPage = () => {
       navigate("/claims");
     }
   };
-  
+
   // Show loading state while fetching claim data for editing
   if (isEditing && isLoading && !claim) {
     return (
@@ -147,7 +156,7 @@ const ClaimFormPage = () => {
             {isEditing ? "Edit Claim" : "New Claim"}
           </h1>
         </div>
-       
+
         <ClaimFormComponent
           claim={claim}
           preSelectedPolicy={preSelectedPolicy}

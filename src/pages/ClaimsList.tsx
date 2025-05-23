@@ -202,7 +202,12 @@ const ClaimsList = () => {
       const finalUrl = `${url}?${queryParams.toString()}`;
       console.log("Fetching from:", finalUrl);
 
-      const res = await fetch(finalUrl);
+      const token = localStorage.getItem("token");
+      const res = await fetch(finalUrl, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
 
       if (!res.ok) throw new Error("Failed to fetch claims");
 

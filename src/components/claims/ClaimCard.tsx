@@ -55,7 +55,6 @@ const ClaimCard = ({ claim }: ClaimCardProps) => {
               {claim.details || `Claim #${claim.claimId}`}
             </h3>
           </Link>
-          {/* <PriorityBadge priority={claim.priority} /> */}
         </div>
       </CardHeader>
       

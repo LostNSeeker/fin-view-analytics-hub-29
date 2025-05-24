@@ -102,7 +102,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
             </div>
           </TableHead>
           <TableHead>Status</TableHead>
-          <TableHead>Priority</TableHead>
+          {/* <TableHead>Priority</TableHead> */}
           <TableHead>
             <div className="flex items-center cursor-pointer" onClick={() => handleSort("clientName")}>
               Client
@@ -142,7 +142,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
               {/* Convert the status to a known valid StatusBadge status if needed */}
               <StatusBadge status={claim.status as any} />
             </TableCell>
-            <TableCell><PriorityBadge priority={claim.priority} /></TableCell>
+            {/* <TableCell><PriorityBadge priority={claim.priority} /></TableCell> */}
             <TableCell>{claim.clientName}</TableCell>
             <TableCell>{claim.assignedEmployee}</TableCell>
             <TableCell className="font-medium">{formatCurrency(claim.claimAmount)}</TableCell>

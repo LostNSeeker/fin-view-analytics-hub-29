@@ -4,7 +4,7 @@ import ClaimsTable from "@/components/claims/ClaimsTable";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { Grid2X2, List, Plus } from "lucide-react";
+import { Grid2X2, List, Plus, SlidersHorizontal } from "lucide-react";
 import ClaimCard from "@/components/claims/ClaimCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
@@ -91,6 +91,7 @@ const ClaimsList = () => {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
   const [claims, setClaims] = useState<Claim[]>([]);
+  const [isFiltersVisible, setIsFiltersVisible] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -355,17 +356,22 @@ const [isModalOpen, setIsModalOpen] = useState(false);
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold tracking-tight">Claims</h1>
-        <Button asChild onClick={handleNewClaim}>
-          {/* <Link to="/claims/new"> */}
+        <div className="flex-row space-x-2">
+          <Button asChild onClick={() => setIsFiltersVisible((prev) => !prev)}>
           <div>
-            <Plus className="mr-2 h-4 w-4" />
-            New Claim
+            <SlidersHorizontal className="h-4 w-4" />
           </div>
-          {/* </Link> */}
-        </Button>
+          </Button>
+          <Button asChild onClick={handleNewClaim}>
+            <div>
+              <Plus className="mr-2 h-4 w-4" />
+              New Claim
+            </div>
+          </Button>
+        </div>      
       </div>
 
-      <ClaimsFilter onFilterChange={handleFilterChange} />
+      {isFiltersVisible && <ClaimsFilter onFilterChange={handleFilterChange} />}
 
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">

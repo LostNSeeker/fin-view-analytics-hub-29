@@ -77,7 +77,7 @@ const Login = () => {
       
       // Navigate to home page
       navigate('/');
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Login failed",
         description: error.message,

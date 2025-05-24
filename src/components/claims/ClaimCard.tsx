@@ -47,7 +47,7 @@ const ClaimCard = ({ claim }: ClaimCardProps) => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground font-mono">#{claim.claimId}</p>
-          <StatusBadge status={claim.status as any} />
+          <StatusBadge status={claim.status as ClaimStatus} />
         </div>
         <div className="flex items-center justify-between">
           <Link to={`/claims/${claim.claimId}`}>
@@ -55,7 +55,7 @@ const ClaimCard = ({ claim }: ClaimCardProps) => {
               {claim.details || `Claim #${claim.claimId}`}
             </h3>
           </Link>
-          <PriorityBadge priority={claim.priority} />
+          {/* <PriorityBadge priority={claim.priority} /> */}
         </div>
       </CardHeader>
       

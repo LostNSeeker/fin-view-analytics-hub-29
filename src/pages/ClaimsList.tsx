@@ -9,7 +9,7 @@ import ClaimCard from "@/components/claims/ClaimCard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import {PolicyTypeModal} from '@/components/claims/ClaimDetail/PolicySelection';
+import {PolicySelectForClaimPopUp} from '@/components/claims/ClaimDetail/PolicySelection';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useUser } from "@/context/UserContext";
 
@@ -358,10 +358,8 @@ const [isModalOpen, setIsModalOpen] = useState(false);
         <h1 className="text-2xl font-semibold tracking-tight">Claims</h1>
         <div className="flex-row space-x-2">
           <Button asChild onClick={() => setIsFiltersVisible((prev) => !prev)}>
-          <div>
-            <SlidersHorizontal className="h-4 w-4" />
-          </div>
-          </Button>
+            filter
+        </Button>
           <Button asChild onClick={handleNewClaim}>
             <div>
               <Plus className="mr-2 h-4 w-4" />
@@ -450,7 +448,7 @@ const [isModalOpen, setIsModalOpen] = useState(false);
           )}
         </>
       )}
-      <PolicyTypeModal
+      <PolicySelectForClaimPopUp
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSelect={handlePolicySelect}

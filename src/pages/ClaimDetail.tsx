@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeftIcon, Edit, Trash2 } from "lucide-react";
-import DocumentPreviewModal from "@/components/claims/DocumentPreviewModal";
-import { ClaimDocument } from "@/types/claim";
+import { ArrowLeft, Edit, Trash2, FileText, Image, Upload } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -15,8 +12,82 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import {useUser} from "@/context/UserContext";
-// Create these components based on the API response structure
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+// Mock data for demonstration
+const mockClaim = {
+  id: "12345",
+  details: "Customer reported water damage to vessel hull during storm. Initial assessment shows moderate damage to starboard side.",
+  customer: {
+    name: "John Smith",
+    email: "john.smith@email.com",
+    number: "+1 (555) 123-4567"
+  },
+  employee: {
+    name: "Sarah Johnson",
+    position: "Senior Claims Adjuster"
+  },
+  metadata: {
+    status: "In Progress",
+    priority: "High",
+    claimAmount: 15000,
+    incidentDate: "2024-01-15"
+  },
+  docs: {
+    photoEvidence: true,
+    estimateProvided: true
+  },
+  policyType: {
+    data: {
+      name: "Marine Insurance",
+      description: "Comprehensive marine vessel coverage",
+      basePremium: 2400
+    }
+  },
+  createdAt: "2024-01-16T10:30:00Z",
+  updatedAt: "2024-01-20T14:45:00Z"
+};
+
+// Document Preview Modal Component
+const DocumentPreviewModal = ({ isOpen, onClose, document }) => {
+  if (!document) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogHeader>
+          <DialogTitle>{document.name}</DialogTitle>
+        </DialogHeader>
+        <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+          {document.type.includes("image") ? (
+            <div className="text-center">
+              <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Image preview would appear here</p>
+              <p className="text-sm text-gray-400 mt-2">
+                In a real implementation, you would display the actual image
+              </p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Document preview would appear here</p>
+              <p className="text-sm text-gray-400 mt-2">
+                In a real implementation, you would display the PDF or document content
+              </p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Claim Information Component
 const ClaimInfo = ({ claim }) => {
   return (
     <div className="bg-white rounded-lg border shadow-sm p-6">
@@ -25,58 +96,67 @@ const ClaimInfo = ({ claim }) => {
         <div className="space-y-3">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Claim ID</h3>
-            <p className="text-base">{claim.id}</p>
+            <p className="text-base">#{claim.id}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Details</h3>
-            <p className="text-base">{claim.details}</p>
+            <p className="text-base">{claim.details || "No details provided"}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
             <div className="flex items-center">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                claim.metadata.status === "Completed" 
+                claim.metadata?.status === "Completed" 
                   ? "bg-green-100 text-green-800" 
-                  : claim.metadata.status === "In Progress" 
+                  : claim.metadata?.status === "In Progress" 
                   ? "bg-blue-100 text-blue-800" 
+                  : claim.metadata?.status === "Approved"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : claim.metadata?.status === "Rejected"
+                  ? "bg-red-100 text-red-800"
                   : "bg-yellow-100 text-yellow-800"
               }`}>
-                {claim.metadata.status}
+                {claim.metadata?.status || "Pending"}
               </span>
             </div>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Priority</h3>
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              claim.metadata.priority === "High" 
+              claim.metadata?.priority === "High" 
                 ? "bg-red-100 text-red-800" 
-                : claim.metadata.priority === "Medium" 
+                : claim.metadata?.priority === "Medium" 
                 ? "bg-orange-100 text-orange-800" 
                 : "bg-gray-100 text-gray-800"
             }`}>
-              {claim.metadata.priority}
+              {claim.metadata?.priority || "Medium"}
             </span>
           </div>
         </div>
         <div className="space-y-3">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Customer</h3>
-            <p className="text-base">{claim.customer.name}</p>
-            <p className="text-sm text-muted-foreground">{claim.customer.email}</p>
-            <p className="text-sm text-muted-foreground">{claim.customer.number}</p>
+            <p className="text-base">{claim.customer?.name || "Unknown Customer"}</p>
+            <p className="text-sm text-muted-foreground">{claim.customer?.email || ""}</p>
+            <p className="text-sm text-muted-foreground">{claim.customer?.number || ""}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Assigned Agent</h3>
-            <p className="text-base">{claim.employee.name}</p>
-            <p className="text-sm text-muted-foreground">{claim.employee.position}</p>
+            <p className="text-base">{claim.employee?.name || "Unassigned"}</p>
+            <p className="text-sm text-muted-foreground">{claim.employee?.position || ""}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Claim Amount</h3>
-            <p className="text-base">${claim.metadata.claimAmount.toLocaleString()}</p>
+            <p className="text-base">${(claim.metadata?.claimAmount || 0).toLocaleString()}</p>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">Incident Date</h3>
-            <p className="text-base">{new Date(claim.metadata.incidentDate).toLocaleDateString()}</p>
+            <p className="text-base">
+              {claim.metadata?.incidentDate 
+                ? new Date(claim.metadata.incidentDate).toLocaleDateString()
+                : "Not specified"
+              }
+            </p>
           </div>
         </div>
       </div>
@@ -84,6 +164,7 @@ const ClaimInfo = ({ claim }) => {
   );
 };
 
+// Claim Documents Component
 const ClaimDocuments = ({ claim, onViewDocument, onDeleteDocument }) => {
   const documents = [];
   
@@ -116,7 +197,8 @@ const ClaimDocuments = ({ claim, onViewDocument, onDeleteDocument }) => {
       
       {documents.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          No documents uploaded for this claim
+          <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+          <p>No documents uploaded for this claim</p>
         </div>
       ) : (
         <div className="divide-y">
@@ -125,19 +207,9 @@ const ClaimDocuments = ({ claim, onViewDocument, onDeleteDocument }) => {
               <div className="flex items-center">
                 <div className="bg-gray-100 rounded p-2 mr-4">
                   {doc.type.includes("image") ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                      <polyline points="21 15 16 10 5 21"></polyline>
-                    </svg>
+                    <Image className="h-6 w-6 text-gray-600" />
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                      <line x1="16" y1="13" x2="8" y2="13"></line>
-                      <line x1="16" y1="17" x2="8" y2="17"></line>
-                      <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
+                    <FileText className="h-6 w-6 text-gray-600" />
                   )}
                 </div>
                 <div>
@@ -167,6 +239,7 @@ const ClaimDocuments = ({ claim, onViewDocument, onDeleteDocument }) => {
       
       <div className="mt-4">
         <Button variant="outline" className="w-full">
+          <Upload className="mr-2 h-4 w-4" />
           Upload New Document
         </Button>
       </div>
@@ -174,6 +247,7 @@ const ClaimDocuments = ({ claim, onViewDocument, onDeleteDocument }) => {
   );
 };
 
+// Claim Timeline Component
 const ClaimTimeline = ({ claim }) => {
   // Create a timeline from the claim data
   const events = [
@@ -183,24 +257,35 @@ const ClaimTimeline = ({ claim }) => {
       description: "Claim was submitted to the system",
       timestamp: claim.createdAt,
       type: "created"
-    },
-    {
+    }
+  ];
+
+  if (claim.employee?.name) {
+    events.push({
       id: "2",
       title: "Agent Assigned",
       description: `${claim.employee.name} was assigned to the claim`,
       timestamp: claim.createdAt,
       type: "assigned"
-    }
-  ];
+    });
+  }
   
   // Add status-based events
-  if (claim.metadata.status === "Completed") {
+  if (claim.metadata?.status === "Completed") {
     events.push({
       id: "3",
       title: "Claim Completed",
-      description: `Claim was resolved with $${claim.metadata.claimAmount} payout`,
+      description: `Claim was resolved with $${(claim.metadata?.claimAmount || 0).toLocaleString()} payout`,
       timestamp: claim.updatedAt,
       type: "completed"
+    });
+  } else if (claim.metadata?.status === "Approved") {
+    events.push({
+      id: "3",
+      title: "Claim Approved",
+      description: "Claim has been approved for processing",
+      timestamp: claim.updatedAt,
+      type: "approved"
     });
   }
   
@@ -212,18 +297,19 @@ const ClaimTimeline = ({ claim }) => {
         {events.map((event, index) => (
           <div key={event.id} className="flex">
             <div className="mr-4 flex flex-col items-center">
-              <div className={`rounded-full h-8 w-8 flex items-center justify-center border-2 ${
-                event.type === "created" ? "border-blue-500 text-blue-500" :
-                event.type === "assigned" ? "border-purple-500 text-purple-500" :
-                "border-green-500 text-green-500"
+              <div className={`rounded-full h-8 w-8 flex items-center justify-center text-sm font-medium border-2 ${
+                event.type === "created" ? "border-blue-500 bg-blue-50 text-blue-600" :
+                event.type === "assigned" ? "border-purple-500 bg-purple-50 text-purple-600" :
+                event.type === "approved" ? "border-emerald-500 bg-emerald-50 text-emerald-600" :
+                "border-green-500 bg-green-50 text-green-600"
               }`}>
                 {index + 1}
               </div>
               {index < events.length - 1 && (
-                <div className="w-0.5 bg-gray-200 h-full mt-2"></div>
+                <div className="w-0.5 bg-gray-200 h-8 mt-2"></div>
               )}
             </div>
-            <div className="pt-1">
+            <div className="pt-1 flex-1">
               <h3 className="font-medium">{event.title}</h3>
               <p className="text-sm text-muted-foreground">{event.description}</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -237,64 +323,38 @@ const ClaimTimeline = ({ claim }) => {
   );
 };
 
-const ClaimDetail = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
+// Main Claim Detail Component
+const ViewClaimPage = ({ claimId = "12345" }) => {
   const { toast } = useToast();
-  const { BackendUrl } = useUser();
   
-  const [loading, setLoading] = useState(true);
-  const [claim, setClaim] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [claim, setClaim] = useState(mockClaim);
   const [error, setError] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   
+  // Simulate loading for demo
   useEffect(() => {
-    const fetchClaim = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(BackendUrl+`/claims/${id}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch claim: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setClaim(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching claim:", err);
-        setError(err.message);
-        toast({
-          title: "Error fetching claim",
-          description: err.message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchClaim();
-  }, [id, toast]);
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  }, []);
   
   const handleDeleteClaim = async () => {
     try {
-      // Replace with actual API call
-      // const response = await fetch(`http://localhost:3000/api/claims/${id}`, {
-      //   method: 'DELETE',
-      // });
-      
-      // if (!response.ok) {
-      //   throw new Error(`Failed to delete claim: ${response.status}`);
-      // }
+      // In real implementation, this would make an API call
+      console.log(`Deleting claim ${claimId}`);
       
       toast({
         title: "Claim deleted",
-        description: `Claim ${id} has been deleted successfully.`,
+        description: `Claim ${claimId} has been deleted successfully.`,
       });
-      navigate("/claims");
+      
+      // In real app: navigate("/claims");
+      console.log("Would navigate to /claims");
+      setIsDeleteDialogOpen(false);
     } catch (err) {
       toast({
         title: "Error deleting claim",
@@ -316,6 +376,14 @@ const ClaimDetail = () => {
     });
   };
 
+  const handleNavigation = (path) => {
+    console.log(`Would navigate to: ${path}`);
+    toast({
+      title: "Navigation",
+      description: `Would navigate to ${path}`,
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -331,7 +399,7 @@ const ClaimDetail = () => {
         <p className="text-muted-foreground mt-2">
           {error || "The claim you are looking for does not exist or has been removed."}
         </p>
-        <Button onClick={() => navigate("/claims")} className="mt-4">
+        <Button onClick={() => handleNavigation("/claims")} className="mt-4">
           Return to Claims List
         </Button>
       </div>
@@ -339,29 +407,38 @@ const ClaimDetail = () => {
   }
 
   return (
-    <div>
+    <div className="container mx-auto p-6">
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="icon" onClick={() => navigate("/claims")}>
-              <ArrowLeftIcon className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => handleNavigation("/claims")}>
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl font-semibold tracking-tight">Claim Details</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Claim #{claim.id} Details
+            </h1>
           </div>
           <div className="flex space-x-2">
-            <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setIsDeleteDialogOpen(true)}>
+            <Button 
+              variant="outline" 
+              className="text-destructive hover:text-destructive" 
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </Button>
-            <Button onClick={() => navigate(`/claims/edit/${id}`)}>
+            <Button onClick={() => handleNavigation(`/claims/${claim.id}/edit`)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </Button>
           </div>
         </div>
 
+        {/* Claim Information */}
         <ClaimInfo claim={claim} />
         
+        {/* Documents and Timeline */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <ClaimDocuments 
@@ -375,28 +452,37 @@ const ClaimDetail = () => {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg border shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Policy Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Policy Type</h3>
-              <p className="text-base">{claim.policyType.data.name}</p>
-              <p className="text-sm text-muted-foreground mt-1">{claim.policyType.data.description}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Base Premium</h3>
-              <p className="text-base">${claim.policyType.data.basePremium.toLocaleString()}/year</p>
+        {/* Policy Information */}
+        {claim.policyType && (
+          <div className="bg-white rounded-lg border shadow-sm p-6">
+            <h2 className="text-xl font-semibold mb-4">Policy Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Policy Type</h3>
+                <p className="text-base">{claim.policyType.data?.name || claim.policyType.name}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {claim.policyType.data?.description || claim.policyType.description}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Base Premium</h3>
+                <p className="text-base">
+                  ${(claim.policyType.data?.basePremium || claim.policyType.basePremium || 0).toLocaleString()}/year
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
+      {/* Document Preview Modal */}
       <DocumentPreviewModal
         isOpen={isDocumentModalOpen}
         onClose={() => setIsDocumentModalOpen(false)}
         document={selectedDocument}
       />
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -421,4 +507,4 @@ const ClaimDetail = () => {
   );
 };
 
-export default ClaimDetail;
+export default ViewClaimPage;

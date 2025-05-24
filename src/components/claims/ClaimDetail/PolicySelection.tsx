@@ -89,12 +89,12 @@ const getNestedSubTypes = (policyId: string, subTypeId?: string): PolicySubType[
   return [];
 };
 
-interface PolicyTypeModalProps {
+interface PolicySelectForClaimPopUpProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect?: (policyType: string, subType?: string, displayName?: string, uniqueId?: string) => void;
 }
-export const PolicyTypeModal: React.FC<PolicyTypeModalProps> = ({ isOpen, onClose, onSelect }) => {
+export const PolicySelectForClaimPopUp: React.FC<PolicySelectForClaimPopUpProps> = ({ isOpen, onClose, onSelect }) => {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 

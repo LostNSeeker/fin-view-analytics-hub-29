@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useUser } from "@/context/UserContext";
+import CreateClaimPopup from "@/components/claims/ClaimDetail/CreateClaim";
 
 const ClaimFormPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,14 +49,11 @@ const ClaimFormPage = () => {
         try {
           // Replace with your actual API endpoint
           const token = localStorage.getItem("token");
-          const response = await fetch(
-            BackendUrl+`/claims/${id}`,
-            {
-              headers: {
-                Authorization: token ? `Bearer ${token}` : "",
-              },
-            }
-          );
+          const response = await fetch(BackendUrl + `/claims/${id}`, {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
+          });
 
           if (!response.ok) {
             throw new Error("Failed to fetch claim");
@@ -158,12 +156,19 @@ const ClaimFormPage = () => {
           </h1>
         </div>
 
-        <ClaimFormComponent
-          claim={claim}
+        <CreateClaimPopup
           preSelectedPolicy={preSelectedPolicy}
           selectedClaim={selectedOption}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
+          isOpen={!isEditing}
+          onClose={handleCancel}
+          onSuccess={(newClaim) => {
+            // Handle success after creating a new claim
+            toast({
+              title: "Claim created",
+              description: `Claim for ${newClaim.policyName} has been created successfully.`,
+            });
+            navigate(`/claims/${newClaim.id}`);
+          }}
         />
       </div>
     </>

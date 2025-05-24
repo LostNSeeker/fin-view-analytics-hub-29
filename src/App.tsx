@@ -16,13 +16,14 @@ import Notifications from "@/pages/Notifications";
 import NotFound from "@/pages/NotFound";
 //claim and auth
 import ClaimsList from "./pages/ClaimsList";
-import ClaimDetail from "./pages/ClaimDetail";
+import ViewClaimPage from "./pages/ClaimDetail";
 import ClaimForm from "./pages/ClaimForm";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import ChangePassword from "./pages/auth/ChangePassword";
+import EditClaimPage from "./components/claims/ClaimDetail/ClaimEditViewPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -60,7 +61,7 @@ const App = () => (
             path="/claims/edit/:id"
             element={
               <MainLayout>
-                <ClaimForm />
+                <EditClaimPage />
               </MainLayout>
             }
           />
@@ -69,7 +70,7 @@ const App = () => (
             path="/claims/:id"
             element={
               <MainLayout>
-                <ClaimDetail />
+                <ViewClaimPage />
               </MainLayout>
             }
           />

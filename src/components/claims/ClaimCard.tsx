@@ -1,13 +1,17 @@
-import { CalendarIcon, UserIcon, ClockIcon, DollarSignIcon, AlertTriangle, FileText } from "lucide-react";
+import { CalendarIcon, UserIcon, ClockIcon, DollarSignIcon, AlertTriangle, FileText, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
 import { formatDate } from "@/lib/date-utils";
 import { Claim, ClaimPriority, ClaimStatus } from "@/types/claim";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface ClaimCardProps {
   claim: Claim;
+  onStatusChange: (claimId: string, newStatus: ClaimStatus) => void;
+  claimStatuses: ClaimStatus[];
 }
 
 // Helper function to format currency
@@ -41,13 +45,30 @@ const PriorityBadge = ({ priority }: { priority: ClaimPriority }) => {
   );
 };
 
-const ClaimCard = ({ claim }: ClaimCardProps) => {
+const ClaimCard = ({ claim, onStatusChange, claimStatuses }: ClaimCardProps) => {
   return (
     <Card className="h-full hover:shadow-md transition-all duration-200 hover:scale-[1.02]">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground font-mono">#{claim.claimId}</p>
-          <StatusBadge status={claim.status as ClaimStatus} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-auto p-0">
+                <StatusBadge status={claim.status as ClaimStatus} />
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {claimStatuses.map((status) => (
+                <DropdownMenuItem
+                  key={status}
+                  onClick={() => onStatusChange(claim.claimId, status)}
+                >
+                  {status}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="flex items-center justify-between">
           <Link to={`/claims/${claim.claimId}`}>

@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import StatusBadge from "./StatusBadge";
-import { ArrowUpDown, MoreHorizontal, Eye, Pencil, Trash, AlertTriangle } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Eye, Pencil, Trash, AlertTriangle, ChevronDown } from "lucide-react";
 import { formatDate } from "@/lib/date-utils";
 import { Claim, ClaimStatus, ClaimPriority } from "@/types/claim";
 import { useUser } from "@/context/UserContext";
@@ -24,6 +24,8 @@ import { useUser } from "@/context/UserContext";
 interface ClaimsTableProps {
   claims: Claim[];
   onDeleteClaim?: (id: string) => void;
+  onStatusChange: (claimId: string, newStatus: ClaimStatus) => void;
+  claimStatuses: ClaimStatus[];
 }
 
 // Helper function to format currency
@@ -57,10 +59,10 @@ const PriorityBadge = ({ priority }: { priority: ClaimPriority }) => {
   );
 };
 
-const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
+const ClaimsTable = ({ claims, onDeleteClaim, onStatusChange, claimStatuses }: ClaimsTableProps) => {
   const [sortField, setSortField] = useState<keyof Claim>("updatedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const {BackendUrl} = useUser();
+  const { BackendUrl } = useUser();
 
   const handleSort = (field: keyof Claim) => {
     if (sortField === field) {
@@ -102,7 +104,6 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
             </div>
           </TableHead>
           <TableHead>Status</TableHead>
-          {/* <TableHead>Priority</TableHead> */}
           <TableHead>
             <div className="flex items-center cursor-pointer" onClick={() => handleSort("clientName")}>
               Insured
@@ -139,10 +140,25 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
               {claim.details}
             </TableCell>
             <TableCell>
-              {/* Convert the status to a known valid StatusBadge status if needed */}
-              <StatusBadge status={claim.status} />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-full justify-start">
+                    <StatusBadge status={claim.status} />
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {claimStatuses.map((status) => (
+                    <DropdownMenuItem
+                      key={status}
+                      onClick={() => onStatusChange(claim.claimId, status)}
+                    >
+                      {status}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableCell>
-            {/* <TableCell><PriorityBadge priority={claim.priority} /></TableCell> */}
             <TableCell>{claim.clientName}</TableCell>
             <TableCell>{claim.assignedEmployee}</TableCell>
             <TableCell className="font-medium">{formatCurrency(claim.claimAmount)}</TableCell>
@@ -157,7 +173,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild>
                     <Link to={`/claims/${claim.claimId}`} className="flex items-center">
                       <Eye className="mr-2 h-4 w-4" />
                       <span>Generate</span>

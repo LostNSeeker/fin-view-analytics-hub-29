@@ -105,23 +105,30 @@ const ClaimsList = () => {
   const [currentFilters, setCurrentFilters] = useState<FilterParams>({});
   const { BackendUrl } = useUser();
 
-  const itemsPerPage = 6; // This should match the 'limit' parameter sent to API
+  const itemsPerPage = 6;
 
-  // Function to transform API data to your frontend Claim type
+  // Define possible claim statuses
+  const claimStatuses: ClaimStatus[] = [
+    "pending",
+    "In Progress",
+    "inReview",
+    "approved",
+    "rejected",
+    "completed",
+  ];
+
   const transformApiDataToClaim = (apiClaim: ApiClaim): Claim => {
-    // Safely handle status and priority values
     const normalizeStatus = (status: string): ClaimStatus => {
       const statusMap: Record<string, ClaimStatus> = {
-        COMPLETED: "Completed",
-        APPROVED: "Approved",
-        "IN PROGRESS": "In Progress",
+        COMPLETED: "completed",
+        APPROVED: "approved",
+        'In Progress': "In Progress",
         PENDING: "pending",
         REJECTED: "rejected",
         "IN REVIEW": "inReview",
       };
       return statusMap[status] || (status as ClaimStatus);
     };
-
     const normalizePriority = (priority: string): ClaimPriority => {
       const priorityMap: Record<string, ClaimPriority> = {
         LOW: "Low",
@@ -176,19 +183,12 @@ const ClaimsList = () => {
   const fetchClaims = async (filters: FilterParams = {}) => {
     try {
       setLoading(true);
-
-      // Determine which endpoint to use based on whether filters are applied
       let url = `${BackendUrl}/claims`;
       let hasFilters = false;
-
-      // Build query string from filters
       const queryParams = new URLSearchParams();
-
-      // Add pagination parameters
       queryParams.append("page", (filters.page || currentPage).toString());
       queryParams.append("limit", itemsPerPage.toString());
 
-      // Check if any filter parameters exist
       if (
         filters.policyNumber ||
         filters.customerName ||
@@ -197,11 +197,8 @@ const ClaimsList = () => {
         filters.dateFrom ||
         filters.dateTo
       ) {
-        // Switch to the filter endpoint
         url = `${BackendUrl}/claims/search_claims`;
         hasFilters = true;
-
-        // Add filter parameters if they exist
         if (filters.policyNumber)
           queryParams.append("policyNumber", filters.policyNumber);
         if (filters.customerName)
@@ -213,7 +210,6 @@ const ClaimsList = () => {
         if (filters.dateTo) queryParams.append("dateTo", filters.dateTo);
       }
 
-      // Append query parameters to URL
       const finalUrl = `${url}?${queryParams.toString()}`;
       console.log("Fetching from:", finalUrl);
 
@@ -227,17 +223,13 @@ const ClaimsList = () => {
       if (!res.ok) throw new Error("Failed to fetch claims");
 
       const response: ApiResponse = await res.json();
-      console.log("API Response:", response);
-
       const apiClaims = response.data;
 
       if (!Array.isArray(apiClaims)) {
         throw new Error("Invalid data format: expected an array");
       }
 
-      // Transform API data to match your frontend Claim type
       const transformedClaims = apiClaims.map(transformApiDataToClaim);
-
       setClaims(transformedClaims);
       setTotalItems(response.pagination.total);
       setTotalPages(response.pagination.pages);
@@ -256,18 +248,17 @@ const ClaimsList = () => {
 
   useEffect(() => {
     fetchClaims();
-  }, [currentPage]); // Fetch claims when page changes
+  }, [currentPage]);
 
   const handleFilterChange = (filters: any) => {
-    // Update current filters state
     const newFilters: FilterParams = {
       policyNumber: filters.policyNumber || undefined,
       customerName: filters.customerName || undefined,
-      employeeName: filters.employee || undefined, // Map employee to employeeName for API
-      status: filters.status ? filters.status.toUpperCase() : undefined, // Convert status to uppercase for API
+      employeeName: filters.employee || undefined,
+      status: filters.status ? filters.status.toUpperCase() : undefined,
       dateFrom: filters.dateFrom || undefined,
       dateTo: filters.dateTo || undefined,
-      page: 1, // Reset to first page when applying new filters
+      page: 1,
     };
 
     setCurrentFilters(newFilters);
@@ -291,13 +282,55 @@ const ClaimsList = () => {
         title: "Claim deleted",
         description: `Claim ${claimId} has been deleted successfully.`,
       });
-
-      // Refresh the claims list after deletion
       fetchClaims(currentFilters);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete claim. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle status change with optimistic update
+  const handleStatusChange = (claimId: string, newStatus: ClaimStatus) => {
+    const originalClaim = claims.find((claim) => claim.claimId === claimId);
+    if (!originalClaim) return;
+
+    setClaims((prevClaims) =>
+      prevClaims.map((claim) =>
+        claim.claimId === claimId ? { ...claim, status: newStatus } : claim
+      )
+    );
+
+    updateClaimStatus(claimId, newStatus, originalClaim.status);
+  };
+
+  // Dummy API call to update status
+  const updateClaimStatus = async (
+    claimId: string,
+    newStatus: ClaimStatus,
+    originalStatus: ClaimStatus
+  ) => {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log(`Updated claim ${claimId} to status ${newStatus}`);
+      toast({
+        title: "Status updated",
+        description: `Claim ${claimId} status has been updated to ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      setClaims((prevClaims) =>
+        prevClaims.map((claim) =>
+          claim.claimId === claimId
+            ? { ...claim, status: originalStatus }
+            : claim
+        )
+      );
+      toast({
+        title: "Error",
+        description: "Failed to update claim status. Please try again.",
         variant: "destructive",
       });
     }
@@ -315,13 +348,7 @@ const ClaimsList = () => {
     displayName?: string
   ) => {
     console.log("Selected:", { policyType, subType, displayName });
-
-    // Close modal
     setIsModalOpen(false);
-
-    // Navigate to form with pre-filled policy type
-    // Example: navigate(`/claims/new?policyType=${policyType}&subType=${subType}&displayName=${displayName}`);
-    // or use state management to pass the selected policy type
   };
 
   if (loading && claims.length === 0) {
@@ -431,12 +458,22 @@ const ClaimsList = () => {
         <>
           {viewMode === "table" ? (
             <div className="border rounded-lg bg-white overflow-hidden">
-              <ClaimsTable claims={claims} onDeleteClaim={handleDeleteClaim} />
+              <ClaimsTable
+                claims={claims}
+                onDeleteClaim={handleDeleteClaim}
+                onStatusChange={handleStatusChange}
+                claimStatuses={claimStatuses}
+              />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {claims.map((claim) => (
-                <ClaimCard key={claim.claimId} claim={claim} />
+                <ClaimCard
+                  key={claim.claimId}
+                  claim={claim}
+                  onStatusChange={handleStatusChange}
+                  claimStatuses={claimStatuses}
+                />
               ))}
             </div>
           )}

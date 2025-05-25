@@ -25,6 +25,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Employee } from '@/types/claim';
 
 // Sample employee data
 const employeesData = [

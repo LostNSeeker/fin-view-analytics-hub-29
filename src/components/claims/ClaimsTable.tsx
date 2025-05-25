@@ -94,10 +94,10 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[80px]">ID</TableHead>
+          <TableHead className="w-auto">Claim ID</TableHead>
           <TableHead>
             <div className="flex items-center cursor-pointer" onClick={() => handleSort("details")}>
-              Details
+              Registration Number
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </div>
           </TableHead>
@@ -105,7 +105,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
           {/* <TableHead>Priority</TableHead> */}
           <TableHead>
             <div className="flex items-center cursor-pointer" onClick={() => handleSort("clientName")}>
-              Client
+              Insured
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </div>
           </TableHead>
@@ -118,7 +118,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
           </TableHead>
           <TableHead>
             <div className="flex items-center cursor-pointer" onClick={() => handleSort("incidentDate")}>
-              Incident Date
+              Intimation Date
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </div>
           </TableHead>
@@ -140,7 +140,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
             </TableCell>
             <TableCell>
               {/* Convert the status to a known valid StatusBadge status if needed */}
-              <StatusBadge status={claim.status as any} />
+              <StatusBadge status={claim.status} />
             </TableCell>
             {/* <TableCell><PriorityBadge priority={claim.priority} /></TableCell> */}
             <TableCell>{claim.clientName}</TableCell>
@@ -160,7 +160,7 @@ const ClaimsTable = ({ claims, onDeleteClaim }: ClaimsTableProps) => {
                 <DropdownMenuItem asChild>
                     <Link to={`/claims/${claim.claimId}`} className="flex items-center">
                       <Eye className="mr-2 h-4 w-4" />
-                      <span>View</span>
+                      <span>Generate</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

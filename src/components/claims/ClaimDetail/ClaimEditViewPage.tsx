@@ -30,11 +30,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar, FileUp, Plus, Save, X, ArrowLeft } from "lucide-react";
+import { FileUp, Plus, Save, X, ArrowLeft, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/UserContext";
+
+const SECTION_TABS = [
+  { key: "details", label: "Details" },
+  { key: "assessment", label: "Assessment" },
+  { key: "documents", label: "Documents" },
+  { key: "feeBill", label: "Fee Bill" },
+];
 
 const EditClaimPage = () => {
   const { id } = useParams();
@@ -44,6 +52,7 @@ const EditClaimPage = () => {
   const [policyTypes, setPolicyTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("details");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { BackendUrl } = useUser();
@@ -286,13 +295,31 @@ const EditClaimPage = () => {
         </div>
       </div>
 
+      {/* Navbar Tabs */}
+      <div className="mb-6 border-b flex space-x-4">
+        {SECTION_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              activeTab === tab.key
+                ? "border-primary text-primary"
+                : "border-transparent text-gray-500 hover:text-primary"
+            }`}
+            onClick={() => setActiveTab(tab.key)}
+            type="button"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <Form {...form}>
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Claim Details Section */}
-            <Card className="col-span-1 md:col-span-2">
+          {/* Only show the active section */}
+          {activeTab === "details" && (
+            <Card>
               <CardHeader>
-                <CardTitle>Claim Details</CardTitle>
+                <CardTitle>Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
@@ -313,118 +340,111 @@ const EditClaimPage = () => {
                       </FormItem>
                     )}
                   />
+                  {/* Party Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="customer_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select customer" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {customers &&
+                                customers.map((customer) => (
+                                  <SelectItem
+                                    key={customer.id}
+                                    value={customer.id.toString()}
+                                  >
+                                    {customer.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="employee_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Assigned Agent</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select agent" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {employees &&
+                                employees.map((employee) => (
+                                  <SelectItem
+                                    key={employee.id}
+                                    value={employee.id.toString()}
+                                  >
+                                    {employee.name} - {employee.position}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="policy_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Policy Type</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select policy type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {policyTypes &&
+                                policyTypes.map((policy) => (
+                                  <SelectItem
+                                    key={policy.id}
+                                    value={policy.id.toString()}
+                                  >
+                                    {policy.data?.name || policy.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Party Information */}
+          {activeTab === "assessment" && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Party Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="customer_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Customer</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select customer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {customers &&
-                            customers.map((customer) => (
-                              <SelectItem
-                                key={customer.id}
-                                value={customer.id.toString()}
-                              >
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="employee_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assigned Agent</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select agent" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {employees &&
-                            employees.map((employee) => (
-                              <SelectItem
-                                key={employee.id}
-                                value={employee.id.toString()}
-                              >
-                                {employee.name} - {employee.position}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="policy_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Policy Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select policy type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {policyTypes &&
-                            policyTypes.map((policy) => (
-                              <SelectItem
-                                key={policy.id}
-                                value={policy.id.toString()}
-                              >
-                                {policy.data?.name || policy.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Claim Metadata */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Claim Information</CardTitle>
+                <CardTitle>Assessment</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -488,31 +508,6 @@ const EditClaimPage = () => {
 
                 <FormField
                   control={form.control}
-                  name="metadata.claimAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Claim Amount</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Enter claim amount"
-                          value={field.value}
-                          onChange={(e) =>
-                            handleNestedChange(
-                              "metadata",
-                              "claimAmount",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="metadata.incidentDate"
                   render={({ field }) => (
                     <FormItem>
@@ -532,7 +527,7 @@ const EditClaimPage = () => {
                               ) : (
                                 <span>Pick a date</span>
                               )}
-                              <Calendar className="ml-auto h-4 w-4 opacity-50" />
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -565,11 +560,12 @@ const EditClaimPage = () => {
                 />
               </CardContent>
             </Card>
+          )}
 
-            {/* Documents Section */}
-            <Card className="col-span-1 md:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Documents</CardTitle>
+          {activeTab === "documents" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Documents</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -631,7 +627,6 @@ const EditClaimPage = () => {
                     )}
                   />
                 </div>
-
                 <div className="border border-dashed p-8 rounded-md flex flex-col items-center justify-center text-center mt-4">
                   <FileUp className="h-8 w-8 text-gray-400 mb-2" />
                   <p className="text-sm text-muted-foreground">
@@ -647,7 +642,42 @@ const EditClaimPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          )}
+
+          {activeTab === "feeBill" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Fee Bill</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="metadata.claimAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Claim Amount</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Enter claim amount"
+                          value={field.value}
+                          onChange={(e) =>
+                            handleNestedChange(
+                              "metadata",
+                              "claimAmount",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* Add more fee bill related fields here if needed */}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="mt-6 flex justify-end space-x-2">
@@ -660,8 +690,8 @@ const EditClaimPage = () => {
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               onClick={form.handleSubmit(handleSubmit)}
               disabled={isLoading}
             >
